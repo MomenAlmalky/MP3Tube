@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/background"
+    tools:context="com.example.almal.mp3tube.AudioHandling.AudioHandlingActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="8"
+        android:orientation="horizontal"
+        >
+
+        <EditText
+            android:id="@+id/edit_text_search_fragment"
+            android:layout_width="match_parent"
+            android:layout_height="35dp"
+            android:layout_marginLeft="10dp"
+            android:ems="15"
+            android:layout_marginTop="5dp"
+            android:layout_weight="1"
+            android:background="#FFFFFF"
+            android:inputType="textPersonName"
+            android:hint="Search"
+            android:textColor="#000000"
+            android:textSize="25sp"
+            />
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_weight="6"
+            android:id="@+id/search_button_search_fragment"
+            android:background="@drawable/search"
+            />
+
+    </LinearLayout>
+    <android.support.v4.view.ViewPager
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:id="@+id/viewPager"
+        >
+
+    </android.support.v4.view.ViewPager>
+
+</LinearLayout>
