@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.BoringLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -102,8 +103,29 @@ public class ResultFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+    }
+
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnResultInteractionListener) {
+            mListener = (OnResultInteractionListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentInteractionListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
+    }
+    public void search(String searchword){
+        videoInfos.clear();
         requestQueue = Volley.newRequestQueue(getActivity());
-        String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&type=video&q="+mParam2+"&key=AIzaSyAsIU3kmaiwxqnEbtI0IvvdVCxxNixbE6c";
+        String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&type=video&q="+searchword+"&key=AIzaSyAsIU3kmaiwxqnEbtI0IvvdVCxxNixbE6c";
         JsonObjectRequest stringRequest = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -128,6 +150,7 @@ public class ResultFragment extends Fragment {
                     RecyclerView rv = (RecyclerView) getView().findViewById(R.id.recycler_view_result_fragment);
                     LinearLayoutManager llm = new LinearLayoutManager(getContext());
                     rv.setLayoutManager(llm);
+
                     RecyclerViewAdapter RA = new RecyclerViewAdapter(videoInfos, new RecyclerViewAdapter.OnItemClickListener() {
                         @Override
                         public void onItemClick(VideoInfo item) {
@@ -137,6 +160,7 @@ public class ResultFragment extends Fragment {
                         }
                     });
                     rv.setAdapter(RA);
+                    RA.notifyDataSetChanged();
                     Log.i("response",jsonObject.toString());
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -150,26 +174,6 @@ public class ResultFragment extends Fragment {
         });
         requestQueue.add(stringRequest);
 
-
-
-    }
-
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnResultInteractionListener) {
-            mListener = (OnResultInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
     }
 
     /**

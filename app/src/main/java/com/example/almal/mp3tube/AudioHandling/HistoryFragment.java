@@ -19,6 +19,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,7 +38,10 @@ public class HistoryFragment extends Fragment {
     String sharedTag = "com.example.almal.mp3tube";
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
-
+    VideoInfo histVideoInfo;
+    ArrayList<VideoInfo> videoInfoArrayList = new ArrayList<>();
+    RecyclerView rv;
+    RecyclerViewAdapter RA;
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
@@ -73,6 +77,7 @@ public class HistoryFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
     }
 
     @Override
@@ -80,30 +85,31 @@ public class HistoryFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_history, container, false);
+
+
     }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        sharedPreferences = this.getActivity().getSharedPreferences(sharedTag,Context.MODE_PRIVATE);
-        Gson gson = new Gson();
-        String json = sharedPreferences.getString("videoInfo","");
-        Type type = new TypeToken<List<VideoInfo>>(){}.getType();
-        List<VideoInfo> videoHistoryList= gson.fromJson(json, type);
+        rv = (RecyclerView) getView().findViewById(R.id.recycler_view_history_fragment);
+        final LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        rv.setLayoutManager(layoutManager);
+        Log.i("sharedvideo",videoInfoArrayList.toString());
+        RA = new RecyclerViewAdapter(videoInfoArrayList, new RecyclerViewAdapter.OnItemClickListener() {
 
-        RecyclerView rv = (RecyclerView) getView().findViewById(R.id.recycler_view_history_fragment);
-        LinearLayoutManager llm = new LinearLayoutManager(getContext());
-        rv.setLayoutManager(llm);
-        RecyclerViewAdapter RA = new RecyclerViewAdapter(videoHistoryList, new RecyclerViewAdapter.OnItemClickListener() {  @Override
-        public void onItemClick(VideoInfo item) {
-            Log.i("playsong",item.getTitle());
-            mListener.onHistoryInteraction("play",item);
+            @Override
+            public void onItemClick(VideoInfo item) {
+                Log.i("playsong",item.getTitle());
+                mListener.onHistoryInteraction("play",item);
 
-        }
+            }
         });
-        rv.setAdapter(RA);
 
-        }
+        rv.setAdapter(RA);
+        RA.notifyDataSetChanged();
+    }
 
 
     @Override
@@ -117,7 +123,21 @@ public class HistoryFragment extends Fragment {
         }
     }
 
-    @Override
+
+
+    public void getHistory(ArrayList<VideoInfo> videoInfosArray){
+
+
+    }
+
+    public void getUpdated(ArrayList<VideoInfo> videoInfosArray) {
+        videoInfoArrayList.clear();
+        videoInfoArrayList.addAll(videoInfosArray);
+        RA.notifyDataSetChanged();
+        rv.invalidate();
+    }
+
+        @Override
     public void onDetach() {
         super.onDetach();
         mListener = null;
