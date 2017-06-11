@@ -1,6 +1,12 @@
 package com.example.almal.mp3tube.AudioHandling;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -9,6 +15,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NotificationCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -19,12 +28,26 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.example.almal.mp3tube.R;
 import com.example.almal.mp3tube.Utilities.HandleProgressBar;
 import com.example.almal.mp3tube.VideoInfo;
 import com.squareup.picasso.Picasso;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
+import java.util.ArrayList;
+
+import static android.content.Context.NOTIFICATION_SERVICE;
+import static com.example.almal.mp3tube.AudioHandling.NotiService.mBuilder;
+import static com.example.almal.mp3tube.AudioHandling.NotiService.mNotificationManager;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -44,7 +67,7 @@ public class MusicPlayerFragment extends Fragment {
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
     private static VideoInfo videoInfo;
-    boolean played;
+    public static boolean played;
     String sharedTag = "com.example.almal.mp3tube";
     Button play;
     TextView current,duration,songTitle;
@@ -52,13 +75,18 @@ public class MusicPlayerFragment extends Fragment {
     ImageView imageView;
     HandleProgressBar handleProgressBar = new HandleProgressBar();
     public Handler mHandler = new Handler();
+    RequestQueue requestQueue;
+    ArrayList<VideoInfo> videoInfos = new ArrayList<>();
 
-    private static MediaPlayer mediaPlayer;
+    public static MediaPlayer mediaPlayer;
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
 
     private OnMusicInteractionListener mListener;
+
+    BroadcastReceiver receiver;
+    Intent service;
 
     public MusicPlayerFragment() {
         // Required empty public constructor
@@ -124,6 +152,10 @@ public class MusicPlayerFragment extends Fragment {
         songTitle = (TextView) getView().findViewById(R.id.tv_title_song_music_player);
         seekBar = (SeekBar) getView().findViewById(R.id.seekBar);
 
+        service = new Intent(getActivity(),NotiService.class);
+        getActivity().registerReceiver(receiver,new IntentFilter("play"));
+
+
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
@@ -176,27 +208,105 @@ public class MusicPlayerFragment extends Fragment {
         }
     };
 
+    public void addToQueue(VideoInfo item){
+        videoInfos.clear();
+        requestQueue = Volley.newRequestQueue(getActivity());
+        String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&type=video&relatedToVideoId="+item.getUrl()+"&key=AIzaSyAsIU3kmaiwxqnEbtI0IvvdVCxxNixbE6c";
+        JsonObjectRequest stringRequest = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+
+                    JSONArray jsonArray = new JSONArray();
+                    JSONObject jsonObject = new JSONObject();
+
+                    jsonArray = (JSONArray) response.get("items");
+                    Log.i("response",jsonObject.toString());
+                    for(int i = 0; i<jsonArray.length();i++) {
+                        jsonObject = jsonArray.getJSONObject(i);
+                        String title = ((JSONObject) jsonObject.get("snippet")).getString("title");
+                        String info = ((JSONObject) jsonObject.get("snippet")).getString("channelTitle");
+                        String imageurl = ((JSONObject)((JSONObject)((JSONObject) jsonObject.get("snippet")).get("thumbnails")).get("default")).getString("url");
+                        String videourl = ((JSONObject) jsonObject.get("id")).getString("videoId");
+                        VideoInfo videoInfo = new VideoInfo(title,info,imageurl,videourl,getContext());
+                        Log.i("VideoInfo "+i+"= ",videoInfo.toString());
+                        videoInfos.add(videoInfo);
+                    }
+
+
+                    Log.i("videoinfoarray",videoInfos.toString());
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+        requestQueue.add(stringRequest);
+
+
+
+    }
+
+    public void handle_play(){
+        Intent yesReceive = new Intent();
+        yesReceive.setAction("play");
+        PendingIntent pendingIntentYes;
+        NotificationCompat.Action action1;
+        ;
+        if(played == false) {
+            played = true;
+            play.setBackgroundResource(R.drawable.img_btn_pause);
+
+            //handling notifications
+            yesReceive.putExtra("player","pause");
+            pendingIntentYes = PendingIntent.getBroadcast(getContext(),12345, yesReceive, PendingIntent.FLAG_UPDATE_CURRENT);
+            action1 = new NotificationCompat.Action.Builder(R.drawable.small_pause, "Pause", pendingIntentYes).build();
+            mBuilder.mActions.clear();
+            mBuilder.addAction(action1);
+            mNotificationManager.notify(0,mBuilder.build());
+
+            mediaPlayer.start();
+            updateProgressBar();
+        }else if(played == true) {
+            played =false;
+            play.setBackgroundResource(R.drawable.img_btn_play);
+
+            //handling notifications
+            yesReceive.putExtra("player","play");
+            pendingIntentYes = PendingIntent.getBroadcast(getContext(),12345, yesReceive, PendingIntent.FLAG_UPDATE_CURRENT);
+            action1 = new NotificationCompat.Action.Builder(R.drawable.small_play, "Play", pendingIntentYes).build();
+            mBuilder.mActions.clear();
+            mBuilder.addAction(action1);
+            mNotificationManager.notify(0,mBuilder.build());
+
+
+            mediaPlayer.pause();
+        }
+
+    }
 
     public void downloadSong(VideoInfo item){
-        played = false;
-        play.setBackgroundResource(R.drawable.img_btn_play);
-        play.setVisibility(View.INVISIBLE);
 
+        getActivity().startService(service);
+        played = true;
+        play.setBackgroundResource(R.drawable.img_btn_pause);
+        play.setVisibility(View.INVISIBLE);
+        current.setText("0:00");
+        mediaPlayer.reset();
         Log.i("videourlclick", "https://lysten-korayementality.c9users.io/music/" + item.getUrl());
         if(mediaPlayer.isPlaying() || mediaPlayer.isLooping()){
             Log.i("checkmedia","reset");
-            //mediaPlayer.release();
-            //viewPager.removeView(viewPager.getRootView());
             try{
             mHandler.removeCallbacks(mUpdateTimeTask);
             }catch (Exception e){
                 e.printStackTrace();
             }
-            mediaPlayer.release();
+            mediaPlayer.reset();
         }
-
-        mediaPlayer = new MediaPlayer();
-
 
         videoInfo = item;
 
@@ -216,39 +326,22 @@ public class MusicPlayerFragment extends Fragment {
         }
         mediaPlayer.prepareAsync();
 
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                if(mediaPlayer != null ) {
-                    mediaPlayer.release();
-                }
-            }
-        });
+
         mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(final MediaPlayer mediaPlayer) {
                 //musicPlayerFragment.mHandler.removeCallbacks(musicPlayerFragment.mUpdateTimeTask);
-
+                updateProgressBar();
                 //musicPlayerFragment = MusicPlayerFragment.newInstance("play",videoInfo.getTitle(),videoInfo,mediaPlayer);
                 play.setVisibility(View.VISIBLE);
+                seekBar.setProgress(0);
+                seekBar.setMax(100);
+                mediaPlayer.start();
                 play.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-
-                        if(played == false) {
-                            mHandler.removeCallbacks(mUpdateTimeTask);
-                            played = true;
-                            play.setBackgroundResource(R.drawable.img_btn_pause);
-                            seekBar.setProgress(0);
-                            seekBar.setMax(100);
-                            mediaPlayer.start();
-                            updateProgressBar();
-                        }else if(played == true) {
-                            mHandler.removeCallbacks(mUpdateTimeTask);
-                            played =false;
-                            play.setBackgroundResource(R.drawable.img_btn_play);
-                            mediaPlayer.pause();
-                        }
+                        mListener.onMusictInteraction("notification","start");
+                        handle_play();
                     }
                 });
 
@@ -260,6 +353,25 @@ public class MusicPlayerFragment extends Fragment {
             }
         });
 
+
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer1) {
+                try{
+                    mediaPlayer.stop();
+                    mediaPlayer.reset();
+                    mHandler.removeCallbacks(mUpdateTimeTask);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+                if(videoInfos.size()!=0){
+                    Log.i("completion","start");
+                    downloadSong(videoInfos.get(0));
+
+                    videoInfos.remove(0);
+                }
+            }
+        });
 
     }
 

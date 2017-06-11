@@ -1,11 +1,17 @@
 package com.example.almal.mp3tube.AudioHandling;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -27,6 +33,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+
 
 public class AudioHandlingActivity extends AppCompatActivity implements SearchFragment.OnSearchInteractionListener, ResultFragment.OnResultInteractionListener,MusicPlayerFragment.OnMusicInteractionListener,HistoryFragment.OnHistoryInteractionListener{
     ViewPager viewPager;
@@ -51,6 +58,8 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
 
     private MediaPlayer mediaPlayer;
     private int playbackPosition=0;
+
+    BroadcastReceiver receiver;
 
     public static Intent getStartIntent(Context context){
         Intent intent = new Intent(context,AudioHandlingActivity.class);
@@ -95,10 +104,33 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
                         InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
                     }
-
+                    NotificationCompat.Builder mBuilder;
                     //pagerAdapter.notifyDataSetChanged();
                     resultFragment.search(text);
+/*
+                    Intent service = new Intent(AudioHandlingActivity.this,NotiService.class);
+                    startService(service);*/
 
+                    receiver = new BroadcastReceiver() {
+                        @Override
+                        public void onReceive(Context context, Intent intent) {
+
+                            musicPlayerFragment.handle_play();
+                            /* Log.i("helloreceived","done");
+                            String status = intent.getStringExtra("player");
+
+                            Log.i("broadcaststatus",status);
+                            if(status.equals("pause")){
+                                MusicPlayerFragment.mediaPlayer.pause();
+                            }
+                            else if(status.equals("play")){
+                                MusicPlayerFragment.mediaPlayer.start();
+                            }
+*/
+                        }
+                    };
+
+                    AudioHandlingActivity.this.registerReceiver(receiver,new IntentFilter("play"));
                     viewPager.setCurrentItem(0);
                 }
                 else {
@@ -127,9 +159,8 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
                 viewPager.setCurrentItem(1);
                 return true;
             case R.id.history:
-                videoInfoArray.clear();
                 int size = sharedPreferences.getInt("size",0);
-                for(int i =0;i<size;i++) {
+                for(int i =videoInfoArray.size();i<size;i++) {
                     String title = sharedPreferences.getString("title"+i, "");
                     Log.i("historyVideoInfo", title+i+"+"+sharedPreferences.getString("title"+i, ""));
                     String url = sharedPreferences.getString("url"+i, "");
@@ -173,10 +204,14 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
             }
         }, 1000);
     }
+
+
     @Override
     public void onDestroy(){
         super.onDestroy();
         mediaPlayer.release();
+        unregisterReceiver(receiver);
+        stopService(new Intent(this,NotiService.class));
     }
         @Override
     public void OnSearchInteractionListener(String action, String message) {
@@ -192,20 +227,20 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
 
     @Override
     public void onResultInteraction(String action, VideoInfo item) {
+
         if(action.equals("play")) {
             videoInfoArrayList.add(item);
             editor.putInt("size",videoInfoArrayList.size());
             editor.commit();
-            for (int i=0;i<videoInfoArrayList.size();i++) {
+            int i = videoInfoArrayList.size()-1;
                 editor.putString("title"+i, videoInfoArrayList.get(i).getTitle());
                 editor.putString("url"+i, videoInfoArrayList.get(i).getUrl());
                 editor.putString("image"+i, videoInfoArrayList.get(i).getImage());
                 editor.commit();
-            }
             Log.i("resultinteraction",videoInfoArrayList.toString());
 
 
-
+            musicPlayerFragment.addToQueue(item);
             viewPager.setCurrentItem(1);
             musicPlayerFragment.downloadSong(item);
         }
@@ -213,6 +248,9 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
 
     @Override
     public void onMusictInteraction(String action, String message) {
+        if(action.equals("notification")){
+
+        }
     }
 
     @Override
@@ -224,3 +262,5 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
         }
     }
 }
+
+
