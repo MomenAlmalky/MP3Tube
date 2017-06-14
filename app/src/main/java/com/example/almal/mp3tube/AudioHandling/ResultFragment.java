@@ -126,7 +126,7 @@ public class ResultFragment extends Fragment {
     public void search(String searchword){
         videoInfos.clear();
         requestQueue = Volley.newRequestQueue(getActivity());
-        String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&type=video&q="+searchword+"&key=AIzaSyAsIU3kmaiwxqnEbtI0IvvdVCxxNixbE6c";
+        String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&type=video&q="+searchword.replaceAll(" ","%20")+"&key=AIzaSyAsIU3kmaiwxqnEbtI0IvvdVCxxNixbE6c";
         JsonObjectRequest stringRequest = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {

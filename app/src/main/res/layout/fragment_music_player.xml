@@ -72,6 +72,7 @@
         android:id="@+id/btn_play_music_player"
         android:background="@drawable/img_btn_play"
         android:visibility="invisible"
+        android:minHeight="10dp"
 
         />
 

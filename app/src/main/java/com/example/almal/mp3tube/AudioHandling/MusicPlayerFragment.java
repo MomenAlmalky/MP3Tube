@@ -211,7 +211,7 @@ public class MusicPlayerFragment extends Fragment {
     public void addToQueue(VideoInfo item){
         videoInfos.clear();
         requestQueue = Volley.newRequestQueue(getActivity());
-        String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&type=video&relatedToVideoId="+item.getUrl()+"&key=AIzaSyAsIU3kmaiwxqnEbtI0IvvdVCxxNixbE6c";
+        String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&type=video&relatedToVideoId="+item.getUrl().replaceAll(" ","%20")+"&key=AIzaSyAsIU3kmaiwxqnEbtI0IvvdVCxxNixbE6c";
         JsonObjectRequest stringRequest = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
