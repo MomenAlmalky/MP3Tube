@@ -1,4 +1,4 @@
-package com.example.almal.mp3tube.Utilities;
+package com.example.almal.mp3tube.utilities;
 
 /**
  * Created by almal on 2017-05-21.

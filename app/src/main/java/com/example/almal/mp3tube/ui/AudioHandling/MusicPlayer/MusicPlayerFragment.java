@@ -1,7 +1,5 @@
-package com.example.almal.mp3tube.AudioHandling;
+package com.example.almal.mp3tube.ui.AudioHandling.MusicPlayer;
 
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,16 +8,12 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationCompat;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,8 +28,9 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.almal.mp3tube.R;
-import com.example.almal.mp3tube.Utilities.HandleProgressBar;
-import com.example.almal.mp3tube.VideoInfo;
+import com.example.almal.mp3tube.data.model.VideoInfo;
+import com.example.almal.mp3tube.utilities.HandleProgressBar;
+import com.example.almal.mp3tube.utilities.NotiService;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -45,9 +40,8 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import static android.content.Context.NOTIFICATION_SERVICE;
-import static com.example.almal.mp3tube.AudioHandling.NotiService.mBuilder;
-import static com.example.almal.mp3tube.AudioHandling.NotiService.mNotificationManager;
+import static com.example.almal.mp3tube.utilities.NotiService.mBuilder;
+import static com.example.almal.mp3tube.utilities.NotiService.mNotificationManager;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -103,7 +97,7 @@ public class MusicPlayerFragment extends Fragment {
      * @return A new instance of fragment MusicPlayerFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static MusicPlayerFragment newInstance(String param1, String param2,VideoInfo videoInfo1,MediaPlayer mediaPlayer1) {
+    public static MusicPlayerFragment newInstance(String param1, String param2, VideoInfo videoInfo1, MediaPlayer mediaPlayer1) {
         MusicPlayerFragment fragment = new MusicPlayerFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
@@ -393,6 +387,6 @@ public class MusicPlayerFragment extends Fragment {
      */
     public interface OnMusicInteractionListener {
         // TODO: Update argument type and name
-        void onMusictInteraction(String action,String message);
+        void onMusictInteraction(String action, String message);
     }
 }

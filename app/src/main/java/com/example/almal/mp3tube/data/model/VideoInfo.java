@@ -1,4 +1,4 @@
-package com.example.almal.mp3tube;
+package com.example.almal.mp3tube.data.model;
 
 import android.content.Context;
 import android.graphics.Bitmap;

@@ -1,8 +1,7 @@
-package com.example.almal.mp3tube.AudioHandling;
+package com.example.almal.mp3tube.ui.AudioHandling.History;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -14,13 +13,10 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.almal.mp3tube.R;
-import com.example.almal.mp3tube.VideoInfo;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.example.almal.mp3tube.data.model.VideoInfo;
+import com.example.almal.mp3tube.utilities.RecyclerViewAdapter;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -97,7 +93,7 @@ public class HistoryFragment extends Fragment {
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         rv.setLayoutManager(layoutManager);
         Log.i("sharedvideo",videoInfoArrayList.toString());
-        RA = new RecyclerViewAdapter(videoInfoArrayList, new RecyclerViewAdapter.OnItemClickListener() {
+      /*  RA = new RecyclerViewAdapter(videoInfoArrayList, new RecyclerViewAdapter.OnItemClickListener() {
 
             @Override
             public void onItemClick(VideoInfo item) {
@@ -106,7 +102,7 @@ public class HistoryFragment extends Fragment {
 
             }
         });
-
+*/
         rv.setAdapter(RA);
         RA.notifyDataSetChanged();
     }
@@ -155,6 +151,6 @@ public class HistoryFragment extends Fragment {
      */
     public interface OnHistoryInteractionListener {
         // TODO: Update argument type and name
-        void onHistoryInteraction(String action,VideoInfo videoInfo);
+        void onHistoryInteraction(String action, VideoInfo videoInfo);
     }
 }

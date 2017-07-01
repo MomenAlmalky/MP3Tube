@@ -1,4 +1,4 @@
-package com.example.almal.mp3tube;
+package com.example.almal.mp3tube.utilities;
 
 /**
  * Created by almal on 2017-05-17.
@@ -7,7 +7,6 @@ package com.example.almal.mp3tube;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.util.Log;
 
 import java.util.ArrayList;
 

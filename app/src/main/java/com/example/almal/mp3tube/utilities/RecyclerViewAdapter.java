@@ -1,7 +1,5 @@
-package com.example.almal.mp3tube.AudioHandling;
+package com.example.almal.mp3tube.utilities;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -12,12 +10,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.almal.mp3tube.R;
-import com.example.almal.mp3tube.VideoInfo;
+import com.example.almal.mp3tube.data.model.Item;
+import com.example.almal.mp3tube.ui.AudioHandling.AudioHandlingActivity;
 import com.squareup.picasso.Picasso;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
 
 /**
@@ -25,15 +21,15 @@ import java.util.List;
  */
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.VideoViewHolder> implements View.OnClickListener{
-    List<VideoInfo> videoInfo;
+    List<Item> itemList;
     private final OnItemClickListener listener;
 
     public interface OnItemClickListener {
-        void onItemClick(VideoInfo item);
+        void onItemClick(Item item);
     }
 
-    public RecyclerViewAdapter(List<VideoInfo> videoInfo, OnItemClickListener listener) {
-        this.videoInfo = videoInfo;
+    public RecyclerViewAdapter(List<Item> snippet, OnItemClickListener listener) {
+        this.itemList = snippet;
         this.listener = listener;
     }
 
@@ -46,9 +42,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     @Override
     public void onBindViewHolder(VideoViewHolder holder, int position) {
-        VideoInfo vi = videoInfo.get(position);
+        Item vi = itemList.get(position);
         /*VideoViewHolder.videoTitle.setText(vi.getTitle());
-        VideoViewHolder.videoInfo.setText(vi.getInfo());
+        VideoViewHolder.snippet.setText(vi.getInfo());
         Log.i("urlimage",vi.getImage());
         Picasso.with(vi.getContext()).load(vi.getImage()).into(VideoViewHolder.videoPhoto);
 */
@@ -57,7 +53,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     @Override
     public int getItemCount() {
-        return videoInfo.size();
+        return itemList.size();
     }
 
     @Override
@@ -80,11 +76,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             videoInfo = (TextView)itemView.findViewById(R.id.video_info);
             videoPhoto = (ImageView)itemView.findViewById(R.id.video_photo);
         }
-        public void bind(final VideoInfo item, final OnItemClickListener listener) {
-            VideoViewHolder.videoTitle.setText(item.getTitle());
-            VideoViewHolder.videoInfo.setText(item.getInfo());
-            Log.i("urlimage",item.getImage());
-            Picasso.with(item.getContext()).load(item.getImage()).into(VideoViewHolder.videoPhoto);
+        public void bind(final Item item, final OnItemClickListener listener) {
+            VideoViewHolder.videoTitle.setText(item.getSnippet().getTitle());
+            VideoViewHolder.videoInfo.setText(item.getSnippet().getChannelTitle());
+            //Log.i("urlimage",item.getImage());
+            Picasso.with(AudioHandlingActivity.context).load(item.getSnippet().getThumbnails().getDefault().getUrl()).into(VideoViewHolder.videoPhoto);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -97,5 +93,16 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
+    }
+	//added to remove duplicated items
+	
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return position;
     }
 }

@@ -1,52 +1,44 @@
-package com.example.almal.mp3tube.AudioHandling;
+package com.example.almal.mp3tube.ui.AudioHandling.Search;
 
 import android.content.Context;
-import android.content.Intent;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.BoringLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.example.almal.mp3tube.R;
-import com.example.almal.mp3tube.VideoInfo;
+import com.example.almal.mp3tube.data.model.Item;
+import com.example.almal.mp3tube.data.model.Snippet;
+import com.example.almal.mp3tube.data.model.VideoInfo;
+import com.example.almal.mp3tube.utilities.GlobalEntities;
+import com.example.almal.mp3tube.utilities.RecyclerViewAdapter;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link ResultFragment.OnResultInteractionListener} interface
+ * {@link SearchFragment.OnResultInteractionListener} interface
  * to handle interaction events.
- * Use the {@link ResultFragment#newInstance} factory method to
+ * Use the {@link SearchFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class ResultFragment extends Fragment {
+public class SearchFragment extends Fragment implements SearchContract.View {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
     RequestQueue requestQueue;
-    ArrayList <VideoInfo> videoInfos= new ArrayList<VideoInfo>();
-
+    ArrayList<VideoInfo> videoInfos = new ArrayList<VideoInfo>();
+    private SearchPresenter mSearchPresenter;
+    RecyclerView rv;
 
 
     // TODO: Rename and change types of parameters
@@ -55,7 +47,7 @@ public class ResultFragment extends Fragment {
 
     private OnResultInteractionListener mListener;
 
-    public ResultFragment() {
+    public SearchFragment() {
         // Required empty public constructor
     }
 
@@ -68,8 +60,8 @@ public class ResultFragment extends Fragment {
      * @return A new instance of fragment ResultFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static ResultFragment newInstance(String param1, String param2) {
-        ResultFragment fragment = new ResultFragment();
+    public static SearchFragment newInstance(String param1, String param2) {
+        SearchFragment fragment = new SearchFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
@@ -90,7 +82,7 @@ public class ResultFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_result, container, false);
+        return inflater.inflate(R.layout.fragment_search, container, false);
     }
 /*
     // TODO: Rename method, update argument and hook method into UI event
@@ -103,9 +95,14 @@ public class ResultFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
+        init();
     }
 
+    public void init() {
+        rv = (RecyclerView) getView().findViewById(R.id.recycler_view_result_fragment);
+        LinearLayoutManager llm = new LinearLayoutManager(getContext());
+        rv.setLayoutManager(llm);
+    }
 
     @Override
     public void onAttach(Context context) {
@@ -123,10 +120,13 @@ public class ResultFragment extends Fragment {
         super.onDetach();
         mListener = null;
     }
-    public void search(String searchword){
+
+/*
+
+    public void search(String searchword) {
         videoInfos.clear();
         requestQueue = Volley.newRequestQueue(getActivity());
-        String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&type=video&q="+searchword.replaceAll(" ","%20")+"&key=AIzaSyAsIU3kmaiwxqnEbtI0IvvdVCxxNixbE6c";
+        String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&type=video&q=" + searchword.replaceAll(" ", "%20") + "&key=AIzaSyAsIU3kmaiwxqnEbtI0IvvdVCxxNixbE6c";
         JsonObjectRequest stringRequest = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -136,15 +136,15 @@ public class ResultFragment extends Fragment {
                     JSONObject jsonObject = new JSONObject();
 
                     jsonArray = (JSONArray) response.get("items");
-                    Log.i("response",jsonObject.toString());
-                    for(int i = 0; i<jsonArray.length();i++) {
+                    Log.i("response", jsonObject.toString());
+                    for (int i = 0; i < jsonArray.length(); i++) {
                         jsonObject = jsonArray.getJSONObject(i);
                         String title = ((JSONObject) jsonObject.get("snippet")).getString("title");
                         String info = ((JSONObject) jsonObject.get("snippet")).getString("channelTitle");
-                        String imageurl = ((JSONObject)((JSONObject)((JSONObject) jsonObject.get("snippet")).get("thumbnails")).get("default")).getString("url");
+                        String imageurl = ((JSONObject) ((JSONObject) ((JSONObject) jsonObject.get("snippet")).get("thumbnails")).get("default")).getString("url");
                         String videourl = ((JSONObject) jsonObject.get("id")).getString("videoId");
-                        VideoInfo videoInfo = new VideoInfo(title,info,imageurl,videourl,getContext());
-                        Log.i("VideoInfo "+i+"= ",videoInfo.toString());
+                        VideoInfo videoInfo = new VideoInfo(title, info, imageurl, videourl, getContext());
+                        Log.i("VideoInfo " + i + "= ", videoInfo.toString());
                         videoInfos.add(videoInfo);
                     }
 
@@ -155,14 +155,14 @@ public class ResultFragment extends Fragment {
                     RecyclerViewAdapter RA = new RecyclerViewAdapter(videoInfos, new RecyclerViewAdapter.OnItemClickListener() {
                         @Override
                         public void onItemClick(VideoInfo item) {
-                            Log.i("playsong",item.getTitle());
-                            mListener.onResultInteraction("play",item);
+                            Log.i("playsong", item.getTitle());
+                            mListener.onResultInteraction("play", item);
 
                         }
                     });
                     rv.setAdapter(RA);
                     RA.notifyDataSetChanged();
-                    Log.i("response",jsonObject.toString());
+                    Log.i("response", jsonObject.toString());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -174,6 +174,24 @@ public class ResultFragment extends Fragment {
             }
         });
         requestQueue.add(stringRequest);
+
+    }
+*/
+
+    @Override
+    public void showResults(List<Item> itemList) {
+
+            Log.i(GlobalEntities.SEARCH_FRAGMENT,"Results are: "+itemList.toString());
+            RecyclerViewAdapter RA = new RecyclerViewAdapter(itemList, new RecyclerViewAdapter.OnItemClickListener() {
+                @Override
+                public void onItemClick(Item item) {
+                    Log.i("playsong", item.getSnippet().getTitle());
+                    mListener.onResultInteraction("play", item);
+
+                }
+            });
+            rv.setAdapter(RA);
+            RA.notifyDataSetChanged();
 
     }
 
@@ -189,6 +207,6 @@ public class ResultFragment extends Fragment {
      */
     public interface OnResultInteractionListener {
         // TODO: Update argument type and name
-        void onResultInteraction(String action , VideoInfo videoInfo);
+        void onResultInteraction(String action, Item item);
     }
 }
