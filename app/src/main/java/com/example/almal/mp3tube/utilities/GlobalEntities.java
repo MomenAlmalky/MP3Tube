@@ -19,6 +19,14 @@ public class GlobalEntities {
     public final static String ERROR_TAG = "error";
     public final static String SEARCH_PRRESENTER = "search_presenter";
     public final static String SEARCH_FRAGMENT = "search_fragment";
+    public final static String PLAY_TAG = "play";
+    public final static String PLAY_MUSIC_API = "https://lysten-korayementality.c9users.io/music/";
+
+    public final static String MUSIC_FRAGMENT_TAG = "music_fragment";
+    public final static String TEST_SONG_URL = "http://6arbyatserver.3lbh.com/public/s/zf-/WFflqdg61EF9KoTf5D7isnC6Z.mp3";
+
+
+
 
 
 

@@ -28,9 +28,14 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.example.almal.mp3tube.R;
+import com.example.almal.mp3tube.data.DataManager;
+import com.example.almal.mp3tube.data.model.Item;
 import com.example.almal.mp3tube.data.model.VideoInfo;
+import com.example.almal.mp3tube.ui.AudioHandling.AudioHandlingActivity;
+import com.example.almal.mp3tube.utilities.GlobalEntities;
 import com.example.almal.mp3tube.utilities.HandleProgressBar;
 import com.example.almal.mp3tube.utilities.NotiService;
+import com.example.almal.mp3tube.utilities.RecyclerViewAdapter;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
@@ -51,26 +56,25 @@ import static com.example.almal.mp3tube.utilities.NotiService.mNotificationManag
  * Use the {@link MusicPlayerFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class MusicPlayerFragment extends Fragment {
+public class MusicPlayerFragment extends Fragment implements MusicPlayerContract.View {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
-    private int seekForwardTime = 5000; // 5000 milliseconds
-    private int seekBackwardTime = 5000;
-    SharedPreferences sharedPreferences;
-    SharedPreferences.Editor editor;
     private static VideoInfo videoInfo;
     public static boolean played;
-    String sharedTag = "com.example.almal.mp3tube";
+    String sharedTag = "com.example.almal.m" +
+            "p3tube";
     Button play;
     TextView current,duration,songTitle;
     SeekBar seekBar;
     ImageView imageView;
+
     HandleProgressBar handleProgressBar = new HandleProgressBar();
     public Handler mHandler = new Handler();
     RequestQueue requestQueue;
     ArrayList<VideoInfo> videoInfos = new ArrayList<>();
+    MusicPlayerPresenter mMusicPresenter;
 
     public static MediaPlayer mediaPlayer;
     // TODO: Rename and change types of parameters
@@ -88,23 +92,13 @@ public class MusicPlayerFragment extends Fragment {
     }
 
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment MusicPlayerFragment.
-     */
     // TODO: Rename and change types and number of parameters
-    public static MusicPlayerFragment newInstance(String param1, String param2, VideoInfo videoInfo1, MediaPlayer mediaPlayer1) {
+    public static MusicPlayerFragment newInstance(String param1, String param2) {
         MusicPlayerFragment fragment = new MusicPlayerFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
-        mediaPlayer = mediaPlayer1;
-        videoInfo = videoInfo1;
         return fragment;
     }
 
@@ -127,6 +121,7 @@ public class MusicPlayerFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        Log.i(GlobalEntities.MUSIC_FRAGMENT_TAG+"onattach","done");
         if (context instanceof OnMusicInteractionListener) {
             mListener = (OnMusicInteractionListener) context;
         } else {
@@ -138,236 +133,22 @@ public class MusicPlayerFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
 
+        Log.i(GlobalEntities.MUSIC_FRAGMENT_TAG+"onactivit","done");
 
         super.onActivityCreated(savedInstanceState);
+
+        mMusicPresenter = new MusicPlayerPresenter(DataManager.getInstance(),getActivity());
+        mMusicPresenter.attachView(this);
+
         play = (Button) getView().findViewById(R.id.btn_play_music_player);
         current = (TextView) getView().findViewById(R.id.current_tv_music_player);
         duration = (TextView) getView().findViewById(R.id.duration_tv_music_player);
         songTitle = (TextView) getView().findViewById(R.id.tv_title_song_music_player);
         seekBar = (SeekBar) getView().findViewById(R.id.seekBar);
-
-        service = new Intent(getActivity(),NotiService.class);
-        getActivity().registerReceiver(receiver,new IntentFilter("play"));
-
-
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                mHandler.removeCallbacks(mUpdateTimeTask);
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                mHandler.removeCallbacks(mUpdateTimeTask);
-                int totalDuration = mediaPlayer.getDuration();
-                int currentPosition = handleProgressBar.progressToTimer(seekBar.getProgress(), totalDuration);
-
-                // forward or backward to certain seconds
-                mediaPlayer.seekTo(currentPosition);
-
-                // update timer progress again
-                updateProgressBar();
-            }
-        });
         imageView = (ImageView) getView().findViewById(R.id.imageview_music_player);
 
     }
 
-    public void updateProgressBar() {
-        mHandler.postDelayed(mUpdateTimeTask, 100);
-    }
-
-    public Runnable mUpdateTimeTask = new Runnable() {
-        public void run() {
-            long totalDuration = mediaPlayer.getDuration();
-            long currentDuration = mediaPlayer.getCurrentPosition();
-
-            // Displaying Total Duration time
-            duration.setText(""+handleProgressBar.milliSecondsToTimer(totalDuration));
-            // Displaying time completed playing
-            current.setText(""+handleProgressBar.milliSecondsToTimer(currentDuration));
-
-            // Updating progress bar
-            int progress = (int)(handleProgressBar.getProgressPercentage(currentDuration, totalDuration));
-            //Log.d("Progress", ""+progress);
-            seekBar.setProgress(progress);
-
-            // Running this thread after 100 milliseconds
-            mHandler.postDelayed(this, 100);
-        }
-    };
-
-    public void addToQueue(VideoInfo item){
-        videoInfos.clear();
-        requestQueue = Volley.newRequestQueue(getActivity());
-        String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&type=video&relatedToVideoId="+item.getUrl().replaceAll(" ","%20")+"&key=AIzaSyAsIU3kmaiwxqnEbtI0IvvdVCxxNixbE6c";
-        JsonObjectRequest stringRequest = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                try {
-
-                    JSONArray jsonArray = new JSONArray();
-                    JSONObject jsonObject = new JSONObject();
-
-                    jsonArray = (JSONArray) response.get("items");
-                    Log.i("response",jsonObject.toString());
-                    for(int i = 0; i<jsonArray.length();i++) {
-                        jsonObject = jsonArray.getJSONObject(i);
-                        String title = ((JSONObject) jsonObject.get("snippet")).getString("title");
-                        String info = ((JSONObject) jsonObject.get("snippet")).getString("channelTitle");
-                        String imageurl = ((JSONObject)((JSONObject)((JSONObject) jsonObject.get("snippet")).get("thumbnails")).get("default")).getString("url");
-                        String videourl = ((JSONObject) jsonObject.get("id")).getString("videoId");
-                        VideoInfo videoInfo = new VideoInfo(title,info,imageurl,videourl,getContext());
-                        Log.i("VideoInfo "+i+"= ",videoInfo.toString());
-                        videoInfos.add(videoInfo);
-                    }
-
-
-                    Log.i("videoinfoarray",videoInfos.toString());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-
-            }
-        });
-        requestQueue.add(stringRequest);
-
-
-
-    }
-
-    public void handle_play(){
-        Intent yesReceive = new Intent();
-        yesReceive.setAction("play");
-        PendingIntent pendingIntentYes;
-        NotificationCompat.Action action1;
-        ;
-        if(played == false) {
-            played = true;
-            play.setBackgroundResource(R.drawable.img_btn_pause);
-
-            //handling notifications
-            yesReceive.putExtra("player","pause");
-            pendingIntentYes = PendingIntent.getBroadcast(getContext(),12345, yesReceive, PendingIntent.FLAG_UPDATE_CURRENT);
-            action1 = new NotificationCompat.Action.Builder(R.drawable.small_pause, "Pause", pendingIntentYes).build();
-            mBuilder.mActions.clear();
-            mBuilder.addAction(action1);
-            mNotificationManager.notify(0,mBuilder.build());
-
-            mediaPlayer.start();
-            updateProgressBar();
-        }else if(played == true) {
-            played =false;
-            play.setBackgroundResource(R.drawable.img_btn_play);
-
-            //handling notifications
-            yesReceive.putExtra("player","play");
-            pendingIntentYes = PendingIntent.getBroadcast(getContext(),12345, yesReceive, PendingIntent.FLAG_UPDATE_CURRENT);
-            action1 = new NotificationCompat.Action.Builder(R.drawable.small_play, "Play", pendingIntentYes).build();
-            mBuilder.mActions.clear();
-            mBuilder.addAction(action1);
-            mNotificationManager.notify(0,mBuilder.build());
-
-
-            mediaPlayer.pause();
-        }
-
-    }
-
-    public void downloadSong(VideoInfo item){
-
-        getActivity().startService(service);
-        played = true;
-        play.setBackgroundResource(R.drawable.img_btn_pause);
-        play.setVisibility(View.INVISIBLE);
-        current.setText("0:00");
-        mediaPlayer.reset();
-        Log.i("videourlclick", "https://lysten-korayementality.c9users.io/music/" + item.getUrl());
-        if(mediaPlayer.isPlaying() || mediaPlayer.isLooping()){
-            Log.i("checkmedia","reset");
-            try{
-            mHandler.removeCallbacks(mUpdateTimeTask);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            mediaPlayer.reset();
-        }
-
-        videoInfo = item;
-
-        Picasso.with(getContext()).load(videoInfo.getImage()).into(imageView);
-        songTitle.setText(videoInfo.getTitle());
-
-
-        try {
-
-            mediaPlayer.setDataSource("https://lysten-korayementality.c9users.io/music/" + videoInfo.getUrl());
-            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-            mediaPlayer.setVolume(100f, 100f);
-            mediaPlayer.setLooping(false);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        mediaPlayer.prepareAsync();
-
-
-        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(final MediaPlayer mediaPlayer) {
-                //musicPlayerFragment.mHandler.removeCallbacks(musicPlayerFragment.mUpdateTimeTask);
-                updateProgressBar();
-                //musicPlayerFragment = MusicPlayerFragment.newInstance("play",videoInfo.getTitle(),videoInfo,mediaPlayer);
-                play.setVisibility(View.VISIBLE);
-                seekBar.setProgress(0);
-                seekBar.setMax(100);
-                mediaPlayer.start();
-                play.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        mListener.onMusictInteraction("notification","start");
-                        handle_play();
-                    }
-                });
-
-                /*
-                pagerAdapter.addFragment(musicPlayerFragment);
-                pagerAdapter.notifyDataSetChanged();
-                viewPager.setCurrentItem(pagerAdapter.getCount());*/
-                Log.i("SongDuration", String.valueOf(mediaPlayer.getDuration()));
-            }
-        });
-
-
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer1) {
-                try{
-                    mediaPlayer.stop();
-                    mediaPlayer.reset();
-                    mHandler.removeCallbacks(mUpdateTimeTask);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-                if(videoInfos.size()!=0){
-                    Log.i("completion","start");
-                    downloadSong(videoInfos.get(0));
-
-                    videoInfos.remove(0);
-                }
-            }
-        });
-
-    }
 
     @Override
     public void onDetach() {
@@ -375,18 +156,21 @@ public class MusicPlayerFragment extends Fragment {
         mListener = null;
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
+    public void streamSong(Item item){
+
+        mMusicPresenter.streamClickedMusic(item);
+    }
+
+    @Override
+    public void playMusic(Item item) {
+        Log.i(GlobalEntities.MUSIC_FRAGMENT_TAG+"item_inf:",item.toString());
+        Picasso.with(getContext()).load(item.getSnippet().getThumbnails().getDefault().getUrl()).into(imageView);
+        mListener.onMusictInteraction(GlobalEntities.PLAY_TAG,item);
+    }
+
+
     public interface OnMusicInteractionListener {
         // TODO: Update argument type and name
-        void onMusictInteraction(String action, String message);
+        void onMusictInteraction(String action, Item item);
     }
 }

@@ -18,7 +18,6 @@ public class Splash extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-
         SearchService service = SearchService.Creator.getService();
         DataManager dataManager = DataManager.getInstance(this, service);
 

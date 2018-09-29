@@ -4,18 +4,30 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.example.almal.mp3tube.R;
+import com.example.almal.mp3tube.data.DataManager;
 import com.example.almal.mp3tube.data.model.Item;
 import com.example.almal.mp3tube.data.model.Snippet;
 import com.example.almal.mp3tube.data.model.VideoInfo;
+import com.example.almal.mp3tube.ui.AudioHandling.AudioHandlingActivity;
 import com.example.almal.mp3tube.utilities.GlobalEntities;
 import com.example.almal.mp3tube.utilities.RecyclerViewAdapter;
 
@@ -39,6 +51,8 @@ public class SearchFragment extends Fragment implements SearchContract.View {
     ArrayList<VideoInfo> videoInfos = new ArrayList<VideoInfo>();
     private SearchPresenter mSearchPresenter;
     RecyclerView rv;
+    EditText searchEditText;
+    Button searchButton;
 
 
     // TODO: Rename and change types of parameters
@@ -98,11 +112,100 @@ public class SearchFragment extends Fragment implements SearchContract.View {
         init();
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+
+        /*
+        menu.clear();
+        inflater.inflate(R.menu.menu, menu);
+        MenuItem item = menu.findItem(R.id.song_play);
+        SearchView searchView = new SearchView(((AudioHandlingActivity) getContext()).getSupportActionBar().getThemedContext());
+        MenuItemCompat.setShowAsAction(item, MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW | MenuItemCompat.SHOW_AS_ACTION_IF_ROOM);
+        MenuItemCompat.setActionView(item, searchView);
+        *//*searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+
+                if (waitUsersAdapter != null){
+                    waitUsersAdapter.getFilter().filter(query);
+                    waitUsersAdapter.notifyDataSetChanged();
+                }
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                Log.i("hereismenu","clicked");
+                if (waitUsersAdapter != null){
+                    newText = newText.toString().toLowerCase();
+
+                    final List<UserEvents> filteredList = new ArrayList<>();
+
+                    for (int i = 0; i < users.size(); i++) {
+
+                        final String text = users.get(i).getName().toLowerCase();
+                        if (text.contains(newText)) {
+
+                            filteredList.add(users.get(i));
+                        }
+                    }
+
+                    waitUsersAdapter = new WaitUsersAdapter(filteredList, new WaitUsersAdapter.OnItemClickListener() {
+                        @Override
+                        public void onItemClick(UserEvents item) {
+                            startActivity(VerifyNumberActivity.getStartIntent(getActivity()));
+                        }
+                    });
+
+                    recyclerView.setAdapter(waitUsersAdapter);
+                    waitUsersAdapter.notifyDataSetChanged();  // data set changed
+                }
+                return false;
+            }
+        });*/
+    }
+
+
+
     public void init() {
+
+        mSearchPresenter = new SearchPresenter(DataManager.getInstance(),getActivity());
+        mSearchPresenter.attachView(this);
+
         rv = (RecyclerView) getView().findViewById(R.id.recycler_view_result_fragment);
         LinearLayoutManager llm = new LinearLayoutManager(getContext());
         rv.setLayoutManager(llm);
+
+        //when button clicked
+        Button searchButton = (Button) getView().findViewById(R.id.search_fragment_search_btn);
+        searchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.i(GlobalEntities.AudioHandling_ACTIVITY,"searchButton: isclicked");
+                searchSong(view);
+            }
+        });
+
+        //when enter clicked on keyboard
+        searchEditText = (EditText) getView().findViewById(R.id.search_fragment_search_et);
+        searchEditText.setImeActionLabel("Search", KeyEvent.KEYCODE_ENTER);
+        searchEditText.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View view, int i, KeyEvent keyEvent) {
+                if ((keyEvent.getAction() == KeyEvent.ACTION_DOWN) &&
+                        (i == KeyEvent.KEYCODE_ENTER)) {
+                    searchSong(view);
+                    return true;
+                }
+                return false;
+            }
+        });
+
+
     }
+
 
     @Override
     public void onAttach(Context context) {
@@ -121,63 +224,6 @@ public class SearchFragment extends Fragment implements SearchContract.View {
         mListener = null;
     }
 
-/*
-
-    public void search(String searchword) {
-        videoInfos.clear();
-        requestQueue = Volley.newRequestQueue(getActivity());
-        String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&type=video&q=" + searchword.replaceAll(" ", "%20") + "&key=AIzaSyAsIU3kmaiwxqnEbtI0IvvdVCxxNixbE6c";
-        JsonObjectRequest stringRequest = new JsonObjectRequest(url, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                try {
-
-                    JSONArray jsonArray = new JSONArray();
-                    JSONObject jsonObject = new JSONObject();
-
-                    jsonArray = (JSONArray) response.get("items");
-                    Log.i("response", jsonObject.toString());
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        jsonObject = jsonArray.getJSONObject(i);
-                        String title = ((JSONObject) jsonObject.get("snippet")).getString("title");
-                        String info = ((JSONObject) jsonObject.get("snippet")).getString("channelTitle");
-                        String imageurl = ((JSONObject) ((JSONObject) ((JSONObject) jsonObject.get("snippet")).get("thumbnails")).get("default")).getString("url");
-                        String videourl = ((JSONObject) jsonObject.get("id")).getString("videoId");
-                        VideoInfo videoInfo = new VideoInfo(title, info, imageurl, videourl, getContext());
-                        Log.i("VideoInfo " + i + "= ", videoInfo.toString());
-                        videoInfos.add(videoInfo);
-                    }
-
-                    RecyclerView rv = (RecyclerView) getView().findViewById(R.id.recycler_view_result_fragment);
-                    LinearLayoutManager llm = new LinearLayoutManager(getContext());
-                    rv.setLayoutManager(llm);
-
-                    RecyclerViewAdapter RA = new RecyclerViewAdapter(videoInfos, new RecyclerViewAdapter.OnItemClickListener() {
-                        @Override
-                        public void onItemClick(VideoInfo item) {
-                            Log.i("playsong", item.getTitle());
-                            mListener.onResultInteraction("play", item);
-
-                        }
-                    });
-                    rv.setAdapter(RA);
-                    RA.notifyDataSetChanged();
-                    Log.i("response", jsonObject.toString());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-
-            }
-        });
-        requestQueue.add(stringRequest);
-
-    }
-*/
-
     @Override
     public void showResults(List<Item> itemList) {
 
@@ -185,14 +231,34 @@ public class SearchFragment extends Fragment implements SearchContract.View {
             RecyclerViewAdapter RA = new RecyclerViewAdapter(itemList, new RecyclerViewAdapter.OnItemClickListener() {
                 @Override
                 public void onItemClick(Item item) {
-                    Log.i("playsong", item.getSnippet().getTitle());
-                    mListener.onResultInteraction("play", item);
-
+                    mListener.onResultInteraction(GlobalEntities.PLAY_TAG, item);
                 }
             });
             rv.setAdapter(RA);
             RA.notifyDataSetChanged();
 
+    }
+
+    public void searchSongAPICall(String text){
+
+    }
+
+    //to search for specific song
+    private void searchSong(View view){
+        String text = searchEditText.getText().toString();
+        text.trim();
+        if(!text.isEmpty()){
+            View keyboard = getActivity().getCurrentFocus();
+            if (view != null) {
+                InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+
+            mSearchPresenter.search_youtube_API(text);
+        }
+        else {
+            Toast.makeText(getContext(),"You must enter a word to start search",Toast.LENGTH_LONG).show();
+        }
     }
 
     /**

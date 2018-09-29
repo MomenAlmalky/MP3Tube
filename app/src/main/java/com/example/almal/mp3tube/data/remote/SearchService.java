@@ -17,6 +17,7 @@ import retrofit2.http.Query;
 
 public interface SearchService {
     //String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&type=video&q="+searchword.replaceAll(" ","%20")+"&key=AIzaSyAsIU3kmaiwxqnEbtI0IvvdVCxxNixbE6c";
+    //String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&type=video&relatedToVideoId="+item.getUrl().replaceAll(" ","%20")+"&key=AIzaSyAsIU3kmaiwxqnEbtI0IvvdVCxxNixbE6c";
 
     @GET("search?")
     rx.Observable<Response> searchVideo(@Query("q") String searchword, @Query("part") String snippet, @Query("maxResults") int maxResults, @Query("type") String type, @Query("key") String key);

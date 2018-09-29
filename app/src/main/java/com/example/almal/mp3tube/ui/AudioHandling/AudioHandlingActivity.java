@@ -1,12 +1,18 @@
 package com.example.almal.mp3tube.ui.AudioHandling;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
+import android.support.annotation.NonNull;
+import android.support.design.widget.BottomNavigationView;
+import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -26,9 +32,11 @@ import com.example.almal.mp3tube.data.model.Item;
 import com.example.almal.mp3tube.data.model.VideoInfo;
 import com.example.almal.mp3tube.ui.AudioHandling.History.HistoryFragment;
 import com.example.almal.mp3tube.ui.AudioHandling.MusicPlayer.MusicPlayerFragment;
+import com.example.almal.mp3tube.ui.AudioHandling.MusicPlayer.MusicPlayerPresenter;
 import com.example.almal.mp3tube.ui.AudioHandling.Search.SearchFragment;
 import com.example.almal.mp3tube.ui.AudioHandling.Search.SearchPresenter;
 import com.example.almal.mp3tube.utilities.GlobalEntities;
+import com.example.almal.mp3tube.utilities.MediaPlayerService;
 import com.example.almal.mp3tube.utilities.NotiService;
 import com.example.almal.mp3tube.utilities.PagerAdapter;
 
@@ -36,32 +44,28 @@ import java.util.ArrayList;
 
 
 public class AudioHandlingActivity extends AppCompatActivity implements SearchFragment.OnResultInteractionListener,MusicPlayerFragment.OnMusicInteractionListener,HistoryFragment.OnHistoryInteractionListener{
-    ViewPager viewPager;
     //String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&q=momen&key={YOUR_API_KEY}";
     //String key = "AIzaSyAsIU3kmaiwxqnEbtI0IvvdVCxxNixbE6c";
     PagerAdapter pagerAdapter;
     MusicPlayerFragment musicPlayerFragment;
     SearchFragment searchFragment;
     HistoryFragment historyFragment;
+    private MediaPlayerService player;
+    BottomNavigationView bottomNavigationView;
+    boolean serviceBound = false;
 
-    SharedPreferences sharedPreferences;
-    SharedPreferences.Editor editor;
-    String sharedTag = "com.example.almal.mp3tube";
-    ArrayList<VideoInfo> videoInfoArrayList = new ArrayList<>();
+
 
     ArrayList<VideoInfo> videoInfoArray = new ArrayList<>();
-    VideoInfo info;
     public static Context context;
 
-    boolean exit = false;
     VideoInfo videoInfo;
     boolean doubleBackToExitPressedOnce = false;
 
-    private MediaPlayer mediaPlayer;
-    private int playbackPosition=0;
 
-    BroadcastReceiver receiver;
-    SearchPresenter mSearchPresenter;
+    //SearchPresenter mSearchPresenter;
+    //MusicPlayerPresenter mMusicPresenter;
+
 
     public static Intent getStartIntent(Context context){
         Intent intent = new Intent(context,AudioHandlingActivity.class);
@@ -72,108 +76,88 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_audio_handling);
-        viewPager = (ViewPager) findViewById(R.id.viewPager);
+        //viewPager = (ViewPager) findViewById(R.id.viewPager);
         init();
     }
 
+
+    //Binding this Client to the AudioPlayer Service
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            MediaPlayerService.LocalBinder binder = (MediaPlayerService.LocalBinder) service;
+            player = binder.getService();
+
+            serviceBound = true;
+
+            Toast.makeText(AudioHandlingActivity.this, "Service Bound", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            serviceBound = false;
+        }
+    };
+
+
+
+    private BottomNavigationView.OnNavigationItemSelectedListener navListner = new BottomNavigationView.OnNavigationItemSelectedListener() {
+        @Override
+        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+            Fragment selectedFragment=null;
+            switch (item.getItemId()){
+                case R.id.menu_nav_search:
+                    selectedFragment = searchFragment;
+                    break;
+                case R.id.menu_nav_song_player:
+                    selectedFragment = musicPlayerFragment;
+                    break;
+                case R.id.menu_nav_history:
+                    selectedFragment = historyFragment;
+                    break;
+            }
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+                    selectedFragment).commitNow();
+            return true;
+
+        }
+    };
+
     private void init() {
         context = getApplicationContext();
-        mediaPlayer = new MediaPlayer();
-        pagerAdapter = new PagerAdapter(getSupportFragmentManager());
+        bottomNavigationView = (BottomNavigationView) findViewById(R.id.bottom_nav_widget);
+        bottomNavigationView.setOnNavigationItemSelectedListener(navListner);
+
+        //create new search fragment instance and make it shown first.
         searchFragment = SearchFragment.newInstance("search","text");
+        musicPlayerFragment = MusicPlayerFragment.newInstance("search","");
+        historyFragment = HistoryFragment.newInstance("search","text");
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,searchFragment).commitNow();
+
+       /* pagerAdapter = new PagerAdapter(getSupportFragmentManager());
         pagerAdapter.addFragment(searchFragment);
-        musicPlayerFragment = MusicPlayerFragment.newInstance("search","",videoInfo,mediaPlayer);
+        musicPlayerFragment = MusicPlayerFragment.newInstance("search","");
         pagerAdapter.addFragment(musicPlayerFragment);
         historyFragment = HistoryFragment.newInstance("search","text");
         pagerAdapter.addFragment(historyFragment);
-        viewPager.setAdapter(pagerAdapter);
-        mSearchPresenter = new SearchPresenter(DataManager.getInstance(),context);
-        mSearchPresenter.attachView(searchFragment);
+        viewPager.setAdapter(pagerAdapter);*/
 
-        final EditText searchText = (EditText) findViewById(R.id.edit_text_search_fragment);
-        searchText.setImeActionLabel("Search", KeyEvent.KEYCODE_ENTER);
-        searchText.setOnKeyListener(new View.OnKeyListener() {
-            @Override
-            public boolean onKey(View view, int i, KeyEvent keyEvent) {
-                if ((keyEvent.getAction() == KeyEvent.ACTION_DOWN) &&
-                        (i == KeyEvent.KEYCODE_ENTER)) {
-                    // Perform action on key press
-                    String text = searchText.getText().toString();
-                    text.trim();
-                    if(!text.isEmpty()) {
-                        View keyboard = AudioHandlingActivity.this.getCurrentFocus();
-                        if (view != null) {
-                            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                        }
-                        mSearchPresenter.search_youtube_API(text);
-                        viewPager.setCurrentItem(0);
-                    }else{
-                        Toast.makeText(getApplicationContext(),"You must enter a word to start search",Toast.LENGTH_LONG).show();
+        /*mSearchPresenter = new SearchPresenter(DataManager.getInstance(),context);
+        mSearchPresenter.attachView(searchFragment);*/
 
-                    }
-                    return true;
-                }
-                return false;
-            }
-        });
-
-        Button searchButton = (Button) findViewById(R.id.search_button_search_fragment);
-        searchButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.i(GlobalEntities.AudioHandling_ACTIVITY,"searchButton: isclicked");
-                String text = searchText.getText().toString();
-                text.trim();
-                if(!text.isEmpty()){
-                    View keyboard = AudioHandlingActivity.this.getCurrentFocus();
-                    if (view != null) {
-                        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                    }
-
-                    //NotificationCompat.Builder mBuilder;
-                    //pagerAdapter.notifyDataSetChanged();
-
-/*
-                    Intent service = new Intent(AudioHandlingActivity.this,NotiService.class);
-                    startService(service);*/
-
-                    /*receiver = new BroadcastReceiver() {
-                        @Override
-                        public void onReceive(Context context, Intent intent) {
-
-                            musicPlayerFragment.handle_play();
-                            *//* Log.i("helloreceived","done");
-                            String status = intent.getStringExtra("player");
-
-                            Log.i("broadcaststatus",status);
-                            if(status.equals("pause")){
-                                MusicPlayerFragment.mediaPlayer.pause();
-                            }
-                            else if(status.equals("play")){
-                                MusicPlayerFragment.mediaPlayer.start();
-                            }
-*//*
-                        }
-                    };
-
-                    AudioHandlingActivity.this.registerReceiver(receiver,new IntentFilter("play"));*/
-                    mSearchPresenter.search_youtube_API(text);
-                    viewPager.setCurrentItem(0);
-                }
-                else {
-                    Toast.makeText(getApplicationContext(),"You must enter a word to start search",Toast.LENGTH_LONG).show();
-                }
-            }
-        });
-
+    /*    mMusicPresenter = new MusicPlayerPresenter(DataManager.getInstance(),context);
+        mMusicPresenter.attachView(musicPlayerFragment);
+*/
 
 
 
     }
 
-    @Override
+
+
+
+   /* @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
         menuInflater.inflate(R.menu.menu,menu);
@@ -188,30 +172,16 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
                 viewPager.setCurrentItem(1);
                 return true;
             case R.id.history:
-                /*int size = sharedPreferences.getInt("size",0);
-                for(int i =videoInfoArray.size();i<size;i++) {
-                    String title = sharedPreferences.getString("title"+i, "");
-                    Log.i("historyVideoInfo", title+i+"+"+sharedPreferences.getString("title"+i, ""));
-                    String url = sharedPreferences.getString("url"+i, "");
-                    String image = sharedPreferences.getString("image"+i, "");
-                    info = new VideoInfo(title, "", image, url, getApplicationContext());
-                    //Log.i("historyVideoInfo", histVideoInfo.toString());
-                    videoInfoArray.add(info);
-                }*/
-
                 viewPager.setCurrentItem(2);
-                historyFragment.getUpdated(videoInfoArray);
+                //historyFragment.getUpdated(videoInfoArray);
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
+    }*/
 
 
-    @Override
+   /* @Override
     public void onBackPressed() {
-        if(mediaPlayer.isPlaying()) {
-            musicPlayerFragment.mHandler.removeCallbacks(musicPlayerFragment.mUpdateTimeTask);
-        }
         if(viewPager.getCurrentItem()==2){
             viewPager.setCurrentItem(0);
         }
@@ -232,51 +202,67 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
                 doubleBackToExitPressedOnce=false;
             }
         }, 1000);
-    }
+    }*/
 
 
     @Override
-    public void onDestroy(){
-        super.onDestroy();
-        mediaPlayer.release();
-        unregisterReceiver(receiver);
-        stopService(new Intent(this,NotiService.class));
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putBoolean("ServiceState", serviceBound);
+        super.onSaveInstanceState(savedInstanceState);
     }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        serviceBound = savedInstanceState.getBoolean("ServiceState");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (serviceBound) {
+            unbindService(serviceConnection);
+            //service is active
+            player.stopSelf();
+        }
+    }
+    private void playAudio(String media) {
+        //Check is service is active
+        if (!serviceBound) {
+            Intent playerIntent = new Intent(this, MediaPlayerService.class);
+            media = GlobalEntities.TEST_SONG_URL;
+            playerIntent.putExtra("media", media);
+            startService(playerIntent);
+            bindService(playerIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+        } else {
+            //Service is active
+            //Send media with BroadcastReceiver
+        }
+    }
+
 
     @Override
     public void onResultInteraction(String action, Item item) {
-/*
-        if(action.equals("play")) {
-            videoInfoArrayList.add(item);
-            editor.putInt("size",videoInfoArrayList.size());
-            editor.commit();
-            int i = videoInfoArrayList.size()-1;
-                editor.putString("title"+i, videoInfoArrayList.get(i).getTitle());
-                editor.putString("url"+i, videoInfoArrayList.get(i).getUrl());
-                editor.putString("image"+i, videoInfoArrayList.get(i).getImage());
-                editor.commit();
-            Log.i("resultinteraction",videoInfoArrayList.toString());
+        if(action.equals(GlobalEntities.PLAY_TAG)){
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,musicPlayerFragment).commitNow();
+            musicPlayerFragment.streamSong(item);
+            //mMusicPresenter.playClickedMusic(item);
+        }
 
-
-            musicPlayerFragment.addToQueue(item);
-            viewPager.setCurrentItem(1);
-            musicPlayerFragment.downloadSong(item);
-        }*/
     }
 
     @Override
-    public void onMusictInteraction(String action, String message) {
-        if(action.equals("notification")){
-
+    public void onMusictInteraction(String action, Item item) {
+        if(action.equals(GlobalEntities.PLAY_TAG)){
+            Log.i(GlobalEntities.AudioHandling_ACTIVITY,"onmusicinteraction: GlobalEntities.PLAY_MUSIC_API+item.getId().getVideoId()");
+            playAudio(GlobalEntities.PLAY_MUSIC_API+item.getId().getVideoId());
         }
     }
 
     @Override
     public void onHistoryInteraction(String action, VideoInfo videoInfo) {
         if(action.equals("play")) {
-            viewPager.setCurrentItem(1);
-
-            musicPlayerFragment.downloadSong(videoInfo);
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,musicPlayerFragment).commitNow();
         }
     }
 }

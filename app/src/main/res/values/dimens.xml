@@ -1,0 +1,117 @@
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <!--1 module = 8dp-->
+    <dimen name="margin_module_4">32dp</dimen>
+    <dimen name="margin_module_4.5">36dp</dimen>
+    <dimen name="margin_module_5.5">44dp</dimen>
+    <dimen name="margin_module_7">56dp</dimen>
+    <dimen name="margin_module_7.5">60dp</dimen>
+    <dimen name="margin_module_8">64dp</dimen>
+    <dimen name="margin_module_9">72dp</dimen>
+    <dimen name="margin_module_1.5">12dp</dimen>
+    <dimen name="margin_module_1.75">16dp</dimen>
+    <dimen name="margin_module_1.85">18dp</dimen>
+    <dimen name="margin_module_1.25">10dp</dimen>
+    <dimen name="margin_module_1">8dp</dimen>
+    <dimen name="margin_module_0.5">4dp</dimen>
+    <dimen name="margin_module_0.25">2dp</dimen>
+    <dimen name="margin_module_2">16dp</dimen>
+    <dimen name="pinview_margin_module_2">-16dp</dimen>
+    <dimen name="margin_module_2.5">20dp</dimen>
+    <dimen name="margin_module_10.5">84dp</dimen>
+    <dimen name="margin_module_11">88dp</dimen>
+    <dimen name="margin_module_10">80dp</dimen>
+    <dimen name="margin_module_5">40dp</dimen>
+    <dimen name="margin_module_6">48dp</dimen>
+    <dimen name="margin_module_6.5">52dp</dimen>
+    <dimen name="margin_module_3">24dp</dimen>
+    <dimen name="margin_module_3.5">28dp</dimen>
+    <dimen name="margin_module_12">96dp</dimen>
+    <dimen name="margin_module_13">104dp</dimen>
+    <dimen name="margin_module_14">112dp</dimen>
+    <dimen name="margin_module_16">128dp</dimen>
+    <dimen name="margin_module_16.5">132dp</dimen>
+    <dimen name="margin_module_17">136dp</dimen>
+    <dimen name="margin_module_18">144dp</dimen>
+    <dimen name="margin_module_15">120dp</dimen>
+    <dimen name="margin_module_15.5">124dp</dimen>
+    <dimen name="margin_module_29">232dp</dimen>
+    <dimen name="margin_module_25">200dp</dimen>
+    <dimen name="margin_module_26">208dp</dimen>
+    <dimen name="margin_module_27">216dp</dimen>
+    <dimen name="margin_module_28">224dp</dimen>
+    <dimen name="margin_module_22">176dp</dimen>
+    <dimen name="margin_module_24">192dp</dimen>
+    <dimen name="margin_module_32">256dp</dimen>
+
+
+    <dimen name="app_bar_f">20dip</dimen>
+    <dimen name="title_0_f">45dip</dimen>
+    <dimen name="title_1_f">28dip</dimen>
+    <dimen name="title_2_f">20dip</dimen>
+    <dimen name="label_l_med_f">18dip</dimen>
+    <dimen name="label_l_reg_f">18dip</dimen>
+    <dimen name="label_s_med_f">16dip</dimen>
+    <dimen name="label_s_reg_f">16dip</dimen>
+    <dimen name="t_big_f">14dip</dimen>
+    <dimen name="t_small_f">12dip</dimen>
+
+    <dimen name="label_l_med_h">24dip</dimen>
+    <dimen name="label_l_reg_h">24dip</dimen>
+    <dimen name="label_s_med_h">20dip</dimen>
+    <dimen name="label_s_reg_h">24dip</dimen>
+    <dimen name="t_big_h">18dip</dimen>
+    <dimen name="t_small_h">16dip</dimen>
+
+
+    <!--updated dimensions -->
+    <dimen name="headline_big">32sp</dimen>
+
+
+    <dimen name="headline_regular_muli_regular">24sp</dimen>
+    <!--<dimen name="headline_regular_line_height">28sp</dimen>-->
+
+    <dimen name="headline_bold_muli_bold">24sp</dimen>
+    <!--<dimen name="headline_bold_line_height">28sp</dimen>-->
+
+    <dimen name="title_muli_bold">20sp</dimen>
+    <dimen name="title_semi_bold">20sp</dimen>
+
+    <dimen name="title_reg">20sp</dimen>
+    <!--<dimen name="title_line_height">24sp</dimen>-->
+
+    <dimen name="label_muli_bold">18sp</dimen>
+
+    <dimen name="label_bold">18sp</dimen>
+    <!--<dimen name="lable_line_height">22sp</dimen>-->
+
+    <dimen name="body_3_muli_bold">16sp</dimen>
+    <dimen name="body_3_muli_Regular">20sp</dimen>
+    <!--<dimen name="body_3_line_height">26sp</dimen>-->
+
+    <dimen name="body_2_muli_bold">16sp</dimen>
+    <dimen name="body_2_reg">16sp</dimen>
+    <!--<dimen name="body_2_line_height">22sp</dimen>-->
+
+    <dimen name="body_2_caps_muli_bold">16sp</dimen>
+    <!--<dimen name="body_2_caps_line_height">22sp</dimen>-->
+
+
+    <dimen name="body_0_muli_bold">14sp</dimen>
+    <dimen name="body_1_muli_bold">14sp</dimen>
+    <dimen name="body_1_muli_reg">14sp</dimen>
+    <dimen name="body_1_semi_bold">14sp</dimen>
+
+    <!--<dimen name="body_1_line_height">20sp</dimen>-->
+
+    <dimen name="caption_1_muli_bold">12sp</dimen>
+    <dimen name="caption_1_reg">12sp</dimen>
+    <dimen name="caption_1_semi_bold">12sp</dimen>
+    <dimen name="caption_2_muli_bold">12sp</dimen>
+    <!--<dimen name="caption_1_line_height">16sp</dimen>-->
+
+    <dimen name="caption_1_caps_muli_bold">12sp</dimen>
+    <dimen name="caption_1_caps_semi_bold">12sp</dimen>
+    <dimen name="caption_2_caps_muli_bold">12sp</dimen>
+    <!--<dimen name="caption_1_caps_line_height">16sp</dimen>-->
+</resources>

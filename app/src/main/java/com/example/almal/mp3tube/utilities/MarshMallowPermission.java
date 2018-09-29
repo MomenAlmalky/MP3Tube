@@ -1,5 +1,6 @@
 package com.example.almal.mp3tube.utilities;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.support.v4.app.ActivityCompat;
@@ -22,6 +23,24 @@ public class MarshMallowPermission {
 
     public boolean checkPermissionForRecord(){
         int result = ContextCompat.checkSelfPermission(activity, android.Manifest.permission.RECORD_AUDIO);
+        if (result == PackageManager.PERMISSION_GRANTED){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean checkPermissionForMediaControl(){
+        int result = ContextCompat.checkSelfPermission(activity, Manifest.permission.MEDIA_CONTENT_CONTROL);
+        if (result == PackageManager.PERMISSION_GRANTED){
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean checkPermissionForPhoneState(){
+        int result = ContextCompat.checkSelfPermission(activity, Manifest.permission.READ_PHONE_STATE);
         if (result == PackageManager.PERMISSION_GRANTED){
             return true;
         } else {

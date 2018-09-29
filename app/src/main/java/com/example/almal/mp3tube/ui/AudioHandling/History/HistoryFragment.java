@@ -93,18 +93,7 @@ public class HistoryFragment extends Fragment {
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         rv.setLayoutManager(layoutManager);
         Log.i("sharedvideo",videoInfoArrayList.toString());
-      /*  RA = new RecyclerViewAdapter(videoInfoArrayList, new RecyclerViewAdapter.OnItemClickListener() {
 
-            @Override
-            public void onItemClick(VideoInfo item) {
-                Log.i("playsong",item.getTitle());
-                mListener.onHistoryInteraction("play",item);
-
-            }
-        });
-*/
-        rv.setAdapter(RA);
-        RA.notifyDataSetChanged();
     }
 
 
