@@ -21,7 +21,6 @@ public class Splash extends AppCompatActivity {
         SearchService service = SearchService.Creator.getService();
         DataManager dataManager = DataManager.getInstance(this, service);
 
-
         Timer splashTimer = new Timer();
         splashTimer.schedule(new TimerTask() {
             @Override

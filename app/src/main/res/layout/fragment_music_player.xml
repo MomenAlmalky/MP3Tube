@@ -1,81 +1,91 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     tools:context="com.example.almal.mp3tube.ui.AudioHandling.AudioHandlingActivity">
 
     <!-- TODO: Update blank fragment layout -->
 
+    <ImageView
+        android:id="@+id/imageview_music_player"
+        android:layout_width="250dp"
+        android:layout_height="250dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="@dimen/margin_module_4"
+        android:layout_gravity="center"
+        android:src="@drawable/music_player_image" />
 
     <TextView
         android:id="@+id/tv_title_song_music_player"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/imageview_music_player"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginTop="@dimen/margin_module_4"
         android:textColor="@color/colorPrimary"
         android:text="Song Title"
-        android:layout_marginTop="20dp"
         android:gravity="center"
-        android:textSize="24sp"/>
-    <ImageView
-        android:layout_width="250dp"
-        android:layout_height="250dp"
-        android:layout_gravity="center"
-        android:id="@+id/imageview_music_player"
-        android:layout_marginTop="30dp"
-        android:src="@drawable/music_player_image"
-        />
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="30dp"
-        android:orientation="horizontal">
+        android:textSize="24sp"
+        android:textStyle="bold|italic"/>
+
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:id="@+id/current_tv_music_player"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/tv_title_song_music_player"
+            app:layout_constraintLeft_toLeftOf="parent"
+            android:layout_marginTop="@dimen/margin_module_4"
+            android:layout_marginLeft="@dimen/margin_module_2"
             android:text="00:00"
-            android:textSize="24sp"
-            android:layout_weight="1"
+            android:textSize="@dimen/body_2_caps_muli_bold"
             android:textStyle="bold"
-            android:layout_marginLeft="10dp"
-            android:textColor="@color/colorPrimary"/>
+            android:textColor="@color/colorPrimary" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
             android:id="@+id/duration_tv_music_player"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/tv_title_song_music_player"
+            app:layout_constraintRight_toRightOf="parent"
+            android:layout_marginTop="@dimen/margin_module_4"
+            android:layout_marginRight="@dimen/margin_module_2"
             android:text="00:00"
-            android:gravity="right"
-            android:layout_weight="1"
-            android:textSize="24sp"
+            android:textSize="@dimen/body_2_caps_muli_bold"
             android:textStyle="bold"
-            android:layout_marginRight="10dp"
-            android:textColor="@color/colorPrimary"/>
-    </LinearLayout>
+            android:textColor="@color/colorPrimary" />
 
     <SeekBar
         android:id="@+id/seekBar"
-        android:layout_width="match_parent"
-        android:layout_marginRight="20dp"
-        android:layout_marginLeft="20dp"
-        android:layout_marginTop="10dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/tv_title_song_music_player"
+        app:layout_constraintLeft_toRightOf="@id/current_tv_music_player"
+        app:layout_constraintRight_toLeftOf="@id/duration_tv_music_player"
+        android:layout_marginTop="@dimen/margin_module_4"
+        android:layout_marginLeft="@dimen/margin_module_0.5"
+        android:layout_marginRight="@dimen/margin_module_0.5"
         android:thumb="@drawable/seek_handler"
         android:progressDrawable="@drawable/seekbar_progress"
         android:paddingLeft="6dp"
-        android:paddingRight="6dp"
-        android:layout_height="wrap_content" />
+        android:paddingRight="6dp"/>
 
 
     <Button
+        android:id="@+id/btn_play_music_player"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/current_tv_music_player"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginTop="@dimen/margin_module_2"
         android:layout_gravity="center"
-        android:id="@+id/btn_play_music_player"
-        android:background="@drawable/img_btn_play"
-        android:visibility="invisible"
-        android:minHeight="10dp"
+        android:background="@drawable/img_btn_pause"
+        android:visibility="invisible"/>
 
-        />
-
-</LinearLayout>
+</android.support.constraint.ConstraintLayout>

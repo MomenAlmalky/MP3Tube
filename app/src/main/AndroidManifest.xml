@@ -24,8 +24,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.AudioHandling.AudioHandlingActivity"
-            android:windowSoftInputMode="adjustPan|adjustResize"/>
-
+            android:windowSoftInputMode="adjustPan|adjustResize"
+            android:launchMode="singleTop"/>
         <service
             android:name=".utilities.NotiService"
             android:exported="false"></service>

@@ -228,7 +228,7 @@ public class SearchFragment extends Fragment implements SearchContract.View {
     public void showResults(List<Item> itemList) {
 
             Log.i(GlobalEntities.SEARCH_FRAGMENT,"Results are: "+itemList.toString());
-            RecyclerViewAdapter RA = new RecyclerViewAdapter(itemList, new RecyclerViewAdapter.OnItemClickListener() {
+            RecyclerViewAdapter RA = new RecyclerViewAdapter(getActivity(),itemList, new RecyclerViewAdapter.OnItemClickListener() {
                 @Override
                 public void onItemClick(Item item) {
                     mListener.onResultInteraction(GlobalEntities.PLAY_TAG, item);

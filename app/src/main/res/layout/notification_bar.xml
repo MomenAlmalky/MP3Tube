@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="@drawable/bottom_nav_background"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
+
+    <ImageView
+        android:id="@+id/notification_logo"
+        android:layout_width="120dp"
+        android:layout_height="match_parent"
+        android:src="@drawable/notification_bar_logo"
+        />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:showDividers="middle"
+        android:layout_marginTop="@dimen/margin_module_2"
+        android:layout_marginBottom="@dimen/margin_module_2"
+        android:layout_marginLeft="@dimen/margin_module_1"
+        android:layout_marginRight="@dimen/margin_module_1"
+        android:divider="@drawable/divider_drawable"
+        >
+
+        <TextView
+            android:id="@+id/notification_title_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/label_muli_bold"
+            android:textStyle="italic"
+            android:layout_marginLeft="@dimen/margin_module_2"
+            android:layout_marginRight="@dimen/margin_module_2"
+            android:text="@string/app_name"/>
+
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/notification_previous_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="@dimen/margin_module_6"
+            android:background="@drawable/notification_previous_track"
+            />
+
+
+
+        <ImageView
+            android:id="@+id/notification_pause_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="@dimen/margin_module_2"
+            />
+
+        <ImageView
+
+            android:id="@+id/notification_next_btn"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:background="@drawable/notification_forward_track"
+            android:layout_marginLeft="@dimen/margin_module_2"
+            />
+
+</LinearLayout>
+
+    </LinearLayout>
+
+
+</LinearLayout>

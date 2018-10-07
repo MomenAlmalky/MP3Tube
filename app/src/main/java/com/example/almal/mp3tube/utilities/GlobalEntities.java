@@ -26,7 +26,27 @@ public class GlobalEntities {
     public final static String TEST_SONG_URL = "http://6arbyatserver.3lbh.com/public/s/zf-/WFflqdg61EF9KoTf5D7isnC6Z.mp3";
 
 
+    public final static String STREAM_PLAYER_TAG = "stream";
+    public final static String RESUME_PLAYER_TAG = "resume";
+    public final static String PAUSE_PLAYER_TAG = "pause";
+    public final static String NEXT_PLAYER_TAG = "next";
+    public final static String PREVIOUS_PLAYER_TAG = "previous";
 
+
+    public static final String NOTIFY_PREVIOUS = "com.mp3tube.notification.previous";
+    public static final String NOTIFY_DELETE = "com.mp3tube.notification.delete";
+    public static final String NOTIFY_PAUSE = "com.mp3tube.notification.pause";
+    public static final String NOTIFY_PLAY = "com.mp3tube.notification.play";
+    public static final String NOTIFY_NEXT = "com.mp3tube.notification.next";
+
+    public static final String SERVICE_STATE = "ServiceState";
+
+    public static final String DELETE_INTENT = "DELETE_INTENT";
+
+    public static final String NOTIFICATION_BAR = "NOTIFICATION_BAR";
+
+    public static final String ON_START_TRACKING = "ON_START_TRACKING";
+    public static final String ON_STOP_TRACKING = "ON_STOP_TRACKING";
 
 
 

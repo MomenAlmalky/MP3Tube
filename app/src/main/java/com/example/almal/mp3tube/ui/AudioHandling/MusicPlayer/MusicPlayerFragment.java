@@ -62,7 +62,8 @@ public class MusicPlayerFragment extends Fragment implements MusicPlayerContract
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
     private static VideoInfo videoInfo;
-    public static boolean played;
+
+    public static boolean pause_flag = false;
     String sharedTag = "com.example.almal.m" +
             "p3tube";
     Button play;
@@ -70,18 +71,16 @@ public class MusicPlayerFragment extends Fragment implements MusicPlayerContract
     SeekBar seekBar;
     ImageView imageView;
 
-    HandleProgressBar handleProgressBar = new HandleProgressBar();
-    public Handler mHandler = new Handler();
     RequestQueue requestQueue;
     ArrayList<VideoInfo> videoInfos = new ArrayList<>();
     MusicPlayerPresenter mMusicPresenter;
 
-    public static MediaPlayer mediaPlayer;
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
 
     private OnMusicInteractionListener mListener;
+    private OnHandlingSeekBarListener handlingSeekBarListener;
 
     BroadcastReceiver receiver;
     Intent service;
@@ -126,8 +125,16 @@ public class MusicPlayerFragment extends Fragment implements MusicPlayerContract
             mListener = (OnMusicInteractionListener) context;
         } else {
             throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+                    + " must implement OnFragmentMusicListener");
         }
+
+        if (context instanceof OnHandlingSeekBarListener) {
+            handlingSeekBarListener = (OnHandlingSeekBarListener) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnFragmentHandlingSeekbarListener");
+        }
+
     }
 
     @Override
@@ -141,11 +148,49 @@ public class MusicPlayerFragment extends Fragment implements MusicPlayerContract
         mMusicPresenter.attachView(this);
 
         play = (Button) getView().findViewById(R.id.btn_play_music_player);
+        play.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Item item = new Item();
+                if(pause_flag == true){
+                    pause_flag = false;
+                    resume();
+                    mListener.onMusictInteraction(GlobalEntities.NOTIFY_PAUSE,item);
+
+                }else {
+                    pause_flag = true;
+                    pause();
+                    mListener.onMusictInteraction(GlobalEntities.NOTIFY_PAUSE,item);
+
+                }
+            }
+        });
         current = (TextView) getView().findViewById(R.id.current_tv_music_player);
         duration = (TextView) getView().findViewById(R.id.duration_tv_music_player);
         songTitle = (TextView) getView().findViewById(R.id.tv_title_song_music_player);
         seekBar = (SeekBar) getView().findViewById(R.id.seekBar);
         imageView = (ImageView) getView().findViewById(R.id.imageview_music_player);
+
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                int progress= 0;
+                handlingSeekBarListener.OnHandlingSeekBarListener(GlobalEntities.ON_START_TRACKING,progress);
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                int progress = seekBar.getProgress();
+                handlingSeekBarListener.OnHandlingSeekBarListener(GlobalEntities.ON_STOP_TRACKING,progress);
+            }
+        });
 
     }
 
@@ -154,10 +199,10 @@ public class MusicPlayerFragment extends Fragment implements MusicPlayerContract
     public void onDetach() {
         super.onDetach();
         mListener = null;
+        handlingSeekBarListener = null;
     }
 
     public void streamSong(Item item){
-
         mMusicPresenter.streamClickedMusic(item);
     }
 
@@ -165,7 +210,18 @@ public class MusicPlayerFragment extends Fragment implements MusicPlayerContract
     public void playMusic(Item item) {
         Log.i(GlobalEntities.MUSIC_FRAGMENT_TAG+"item_inf:",item.toString());
         Picasso.with(getContext()).load(item.getSnippet().getThumbnails().getDefault().getUrl()).into(imageView);
+        play.setVisibility(View.VISIBLE);
+        seekBar.setVisibility(View.VISIBLE);
         mListener.onMusictInteraction(GlobalEntities.PLAY_TAG,item);
+    }
+
+    public void pause() {
+        play.setVisibility(View.VISIBLE);
+        play.setBackgroundResource(R.drawable.img_btn_play);
+    }
+
+    public void resume() {
+        play.setBackgroundResource(R.drawable.img_btn_pause);
     }
 
 
@@ -173,4 +229,24 @@ public class MusicPlayerFragment extends Fragment implements MusicPlayerContract
         // TODO: Update argument type and name
         void onMusictInteraction(String action, Item item);
     }
+
+    public interface OnHandlingSeekBarListener {
+        // TODO: Update argument type and name
+        void OnHandlingSeekBarListener(String action,int progress);
+    }
+
+    public void handleSeekBar(String totalDuration,String currentDuration,int percent){
+
+        // Displaying Total Duration time
+        duration.setText(""+totalDuration);
+        // Displaying time completed playing
+        current.setText(""+currentDuration);
+
+        // Updating progress bar
+        int progress = (int)(percent);
+        //Log.d("Progress", ""+progress);
+        seekBar.setProgress(progress);
+
+    }
+
 }

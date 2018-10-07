@@ -87,8 +87,9 @@ public class NotiService extends IntentService {
             PendingIntent pendingIntentYes;
 
             yesReceive.putExtra("player","pause");
-            pendingIntentYes = PendingIntent.getBroadcast(this,12345, yesReceive, PendingIntent.FLAG_UPDATE_CURRENT);
+            pendingIntentYes = PendingIntent.getBroadcast(this,0, yesReceive, PendingIntent.FLAG_UPDATE_CURRENT);
             action1 = new NotificationCompat.Action.Builder(R.drawable.small_pause, "Pause", pendingIntentYes).build();
+
 
             mBuilder.addAction(action1);
             Intent notificationIntent = new Intent(this, AudioHandlingActivity.class);

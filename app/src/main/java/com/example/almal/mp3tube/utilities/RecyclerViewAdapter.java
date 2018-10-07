@@ -1,5 +1,6 @@
 package com.example.almal.mp3tube.utilities;
 
+import android.content.Context;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -23,20 +24,22 @@ import java.util.List;
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.VideoViewHolder> implements View.OnClickListener{
     List<Item> itemList;
     private final OnItemClickListener listener;
+    Context context;
 
     public interface OnItemClickListener {
         void onItemClick(Item item);
     }
 
-    public RecyclerViewAdapter(List<Item> snippet, OnItemClickListener listener) {
+    public RecyclerViewAdapter(Context context,List<Item> snippet, OnItemClickListener listener) {
         this.itemList = snippet;
         this.listener = listener;
+        this.context = context;
     }
 
     @Override
     public VideoViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_view, parent, false);
-        VideoViewHolder pvh = new VideoViewHolder(v);
+        VideoViewHolder pvh = new VideoViewHolder(v,context);
         return pvh;
     }
 
@@ -68,19 +71,22 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         static TextView videoTitle;
         static TextView videoInfo;
         static ImageView videoPhoto;
+        Context context;
 
-        VideoViewHolder(View itemView) {
+        VideoViewHolder(View itemView,Context context) {
             super(itemView);
             cv = (CardView)itemView.findViewById(R.id.cv);
             videoTitle = (TextView)itemView.findViewById(R.id.video_title);
             videoInfo = (TextView)itemView.findViewById(R.id.video_info);
             videoPhoto = (ImageView)itemView.findViewById(R.id.video_photo);
+            this.context = context;
         }
         public void bind(final Item item, final OnItemClickListener listener) {
             VideoViewHolder.videoTitle.setText(item.getSnippet().getTitle());
             VideoViewHolder.videoInfo.setText(item.getSnippet().getChannelTitle());
             //Log.i("urlimage",item.getImage());
-            Picasso.with(AudioHandlingActivity.context).load(item.getSnippet().getThumbnails().getDefault().getUrl()).into(VideoViewHolder.videoPhoto);
+            Picasso.with(context).load(item.getSnippet().getThumbnails().getDefault().getUrl()).into(VideoViewHolder.videoPhoto);
+
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
