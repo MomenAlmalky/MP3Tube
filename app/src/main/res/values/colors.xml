@@ -7,6 +7,9 @@
     <color name="colorBlack">#000000</color>
     <color name="colorGreyShadaw">#37000000</color>
     <color name="colorLightPink">#fd4a6c</color>
+    <color name="colorLightPinkShadaw">#CC4a6c</color>
+
+    <color name="colorLightGrey">#80828A</color>
     <color name="colorLightBlack">#24262B</color>
 
 </resources>

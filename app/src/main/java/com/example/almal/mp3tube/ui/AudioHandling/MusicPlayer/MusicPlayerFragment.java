@@ -1,18 +1,9 @@
 package com.example.almal.mp3tube.ui.AudioHandling.MusicPlayer;
 
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,68 +13,27 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.example.almal.mp3tube.R;
 import com.example.almal.mp3tube.data.DataManager;
-import com.example.almal.mp3tube.data.model.Item;
-import com.example.almal.mp3tube.data.model.VideoInfo;
-import com.example.almal.mp3tube.ui.AudioHandling.AudioHandlingActivity;
+import com.example.almal.mp3tube.data.model.FirebaseTracks;
 import com.example.almal.mp3tube.utilities.GlobalEntities;
-import com.example.almal.mp3tube.utilities.HandleProgressBar;
-import com.example.almal.mp3tube.utilities.NotiService;
-import com.example.almal.mp3tube.utilities.RecyclerViewAdapter;
 import com.squareup.picasso.Picasso;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.IOException;
-import java.util.ArrayList;
-
-import static com.example.almal.mp3tube.utilities.NotiService.mBuilder;
-import static com.example.almal.mp3tube.utilities.NotiService.mNotificationManager;
-
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link MusicPlayerFragment.OnMusicInteractionListener} interface
- * to handle interaction events.
- * Use the {@link MusicPlayerFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class MusicPlayerFragment extends Fragment implements MusicPlayerContract.View {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-    private static VideoInfo videoInfo;
 
-    public static boolean pause_flag = false;
-    String sharedTag = "com.example.almal.m" +
-            "p3tube";
-    Button play;
-    TextView current,duration,songTitle;
+    public boolean pause_flag;
+    Button play, next_btn, previous_btn, like_btn, add_to_playlist_btn;
+    TextView current, duration, songTitle, songArtist;
     SeekBar seekBar;
     ImageView imageView;
 
-    RequestQueue requestQueue;
-    ArrayList<VideoInfo> videoInfos = new ArrayList<>();
     MusicPlayerPresenter mMusicPresenter;
+    FirebaseTracks firebaseTrack;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
     private OnMusicInteractionListener mListener;
     private OnHandlingSeekBarListener handlingSeekBarListener;
 
-    BroadcastReceiver receiver;
-    Intent service;
 
     public MusicPlayerFragment() {
         // Required empty public constructor
@@ -91,36 +41,99 @@ public class MusicPlayerFragment extends Fragment implements MusicPlayerContract
     }
 
 
-    // TODO: Rename and change types and number of parameters
-    public static MusicPlayerFragment newInstance(String param1, String param2) {
+    public static MusicPlayerFragment newInstance() {
         MusicPlayerFragment fragment = new MusicPlayerFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
         return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+
+        //initialize non-graphical variables
+        pause_flag = false;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_music_player, container, false);
+        View view = inflater.inflate(R.layout.fragment_music_player, container, false);
+        //initialize graphical variables
+        next_btn = (Button) view.findViewById(R.id.btn_next_music_player);
+        previous_btn = (Button) view.findViewById(R.id.btn_prev_music_player);
+        like_btn = (Button) view.findViewById(R.id.btn_like_player_player);
+        add_to_playlist_btn = (Button) view.findViewById(R.id.btn_playlist_music_player);
+
+        current = (TextView) view.findViewById(R.id.current_tv_music_player);
+        duration = (TextView) view.findViewById(R.id.duration_tv_music_player);
+        songTitle = (TextView) view.findViewById(R.id.tv_title_song_music_player);
+        songArtist = (TextView) view.findViewById(R.id.tv_artist_song_music_player);
+        seekBar = (SeekBar) view.findViewById(R.id.seekBar);
+        imageView = (ImageView) view.findViewById(R.id.imageview_music_player);
+        play = (Button) view.findViewById(R.id.btn_play_music_player);
+
+        // set onclick listner to like button
+        like_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //check from presenter if it was liked before
+                mMusicPresenter.isLiked(firebaseTrack, GlobalEntities.TRUE_VALUE);
+            }
+        });
+
+        // set onclick listner to play button and send the state of play/pause to
+        // audioHandling activity
+        play.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                if (pause_flag == true) {
+                    pause_flag = false;
+                    resume();
+                    mListener.onMusictInteraction(GlobalEntities.NOTIFY_PAUSE, firebaseTrack);
+
+                } else {
+                    pause_flag = true;
+                    pause();
+                    mListener.onMusictInteraction(GlobalEntities.NOTIFY_PAUSE, firebaseTrack);
+
+                }
+            }
+        });
+
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                int progress = 0;
+                handlingSeekBarListener.OnHandlingSeekBarListener(GlobalEntities.ON_START_TRACKING, progress);
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                int progress = seekBar.getProgress();
+                handlingSeekBarListener.OnHandlingSeekBarListener(GlobalEntities.ON_STOP_TRACKING, progress);
+            }
+        });
+
+        return view;
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        Log.i(GlobalEntities.MUSIC_FRAGMENT_TAG+"onattach","done");
+
+        mMusicPresenter = new MusicPlayerPresenter(DataManager.getInstance(), getActivity());
+        mMusicPresenter.attachView(this);
+
+        Log.i(GlobalEntities.MUSIC_FRAGMENT_TAG + "onattach", "done");
         if (context instanceof OnMusicInteractionListener) {
             mListener = (OnMusicInteractionListener) context;
         } else {
@@ -140,57 +153,8 @@ public class MusicPlayerFragment extends Fragment implements MusicPlayerContract
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
 
-        Log.i(GlobalEntities.MUSIC_FRAGMENT_TAG+"onactivit","done");
-
         super.onActivityCreated(savedInstanceState);
 
-        mMusicPresenter = new MusicPlayerPresenter(DataManager.getInstance(),getActivity());
-        mMusicPresenter.attachView(this);
-
-        play = (Button) getView().findViewById(R.id.btn_play_music_player);
-        play.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Item item = new Item();
-                if(pause_flag == true){
-                    pause_flag = false;
-                    resume();
-                    mListener.onMusictInteraction(GlobalEntities.NOTIFY_PAUSE,item);
-
-                }else {
-                    pause_flag = true;
-                    pause();
-                    mListener.onMusictInteraction(GlobalEntities.NOTIFY_PAUSE,item);
-
-                }
-            }
-        });
-        current = (TextView) getView().findViewById(R.id.current_tv_music_player);
-        duration = (TextView) getView().findViewById(R.id.duration_tv_music_player);
-        songTitle = (TextView) getView().findViewById(R.id.tv_title_song_music_player);
-        seekBar = (SeekBar) getView().findViewById(R.id.seekBar);
-        imageView = (ImageView) getView().findViewById(R.id.imageview_music_player);
-
-
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                int progress= 0;
-                handlingSeekBarListener.OnHandlingSeekBarListener(GlobalEntities.ON_START_TRACKING,progress);
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                int progress = seekBar.getProgress();
-                handlingSeekBarListener.OnHandlingSeekBarListener(GlobalEntities.ON_STOP_TRACKING,progress);
-            }
-        });
 
     }
 
@@ -199,52 +163,68 @@ public class MusicPlayerFragment extends Fragment implements MusicPlayerContract
     public void onDetach() {
         super.onDetach();
         mListener = null;
+        mMusicPresenter.detachView();
         handlingSeekBarListener = null;
     }
 
-    public void streamSong(Item item){
-        mMusicPresenter.streamClickedMusic(item);
+    public void streamSong(FirebaseTracks firebaseTrack) {
+        this.firebaseTrack = firebaseTrack;
+        playMusic(firebaseTrack);
     }
 
     @Override
-    public void playMusic(Item item) {
-        Log.i(GlobalEntities.MUSIC_FRAGMENT_TAG+"item_inf:",item.toString());
-        Picasso.with(getContext()).load(item.getSnippet().getThumbnails().getDefault().getUrl()).into(imageView);
-        play.setVisibility(View.VISIBLE);
-        seekBar.setVisibility(View.VISIBLE);
-        mListener.onMusictInteraction(GlobalEntities.PLAY_TAG,item);
+    public void playMusic(FirebaseTracks firebaseTrack) {
+        Picasso.with(getContext()).load(firebaseTrack.getTrack_image()).into(imageView);
+        songTitle.setText(firebaseTrack.getTrack_title());
+        songArtist.setText(firebaseTrack.getTrack_author());
+        mMusicPresenter.isLiked(firebaseTrack, GlobalEntities.FALSE_VALUE);
+        mListener.onMusictInteraction(GlobalEntities.PLAY_TAG, firebaseTrack);
+    }
+
+    @Override
+    public void isLikedCallBack(boolean isliked, boolean likeBtn) {
+        if (isliked && likeBtn) {
+            mMusicPresenter.unLikeTrack(firebaseTrack);
+            like_btn.setBackgroundResource(R.drawable.icons8_unlike_heart);
+        }else if(!isliked && likeBtn){
+            mMusicPresenter.likeTrack(firebaseTrack);
+            like_btn.setBackgroundResource(R.drawable.icons8_liked_heart);
+        }else if(isliked && !likeBtn){
+            like_btn.setBackgroundResource(R.drawable.icons8_liked_heart);
+        }else{
+            like_btn.setBackgroundResource(R.drawable.icons8_unlike_heart);
+        }
     }
 
     public void pause() {
-        play.setVisibility(View.VISIBLE);
-        play.setBackgroundResource(R.drawable.img_btn_play);
+        play.setBackgroundResource(R.drawable.ic_play_button_player);
     }
 
     public void resume() {
-        play.setBackgroundResource(R.drawable.img_btn_pause);
+        play.setBackgroundResource(R.drawable.ic_pause_button_player_7);
     }
 
 
     public interface OnMusicInteractionListener {
         // TODO: Update argument type and name
-        void onMusictInteraction(String action, Item item);
+        void onMusictInteraction(String action, FirebaseTracks firebaseTrack);
     }
 
     public interface OnHandlingSeekBarListener {
         // TODO: Update argument type and name
-        void OnHandlingSeekBarListener(String action,int progress);
+        void OnHandlingSeekBarListener(String action, int progress);
     }
 
-    public void handleSeekBar(String totalDuration,String currentDuration,int percent){
+    public void handleSeekBar(String totalDuration, String currentDuration, int percent) {
 
         // Displaying Total Duration time
-        duration.setText(""+totalDuration);
+        duration.setText("" + totalDuration);
         // Displaying time completed playing
-        current.setText(""+currentDuration);
+        current.setText("" + currentDuration);
 
         // Updating progress bar
-        int progress = (int)(percent);
-        //Log.d("Progress", ""+progress);
+        int progress = (int) (percent);
+
         seekBar.setProgress(progress);
 
     }

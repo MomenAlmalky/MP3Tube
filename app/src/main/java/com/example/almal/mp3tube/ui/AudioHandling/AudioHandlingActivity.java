@@ -15,35 +15,47 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 
 import com.example.almal.mp3tube.R;
 import com.example.almal.mp3tube.data.DataManager;
+import com.example.almal.mp3tube.data.model.FirebaseTracks;
 import com.example.almal.mp3tube.data.model.Item;
 import com.example.almal.mp3tube.data.model.VideoInfo;
-import com.example.almal.mp3tube.data.remote.SearchService;
-import com.example.almal.mp3tube.ui.AudioHandling.History.HistoryFragment;
+import com.example.almal.mp3tube.ui.AudioHandling.Profile.ProfileFragment;
 import com.example.almal.mp3tube.ui.AudioHandling.MusicPlayer.MusicPlayerFragment;
+import com.example.almal.mp3tube.ui.AudioHandling.Profile.likes.LikeFragment;
 import com.example.almal.mp3tube.ui.AudioHandling.Search.SearchFragment;
+import com.example.almal.mp3tube.ui.OnBoarding.SignUp.SignUpActivity;
 import com.example.almal.mp3tube.utilities.GlobalEntities;
 import com.example.almal.mp3tube.utilities.HandleProgressBar;
+import com.example.almal.mp3tube.utilities.LikesRecyclerViewAdapter;
 import com.example.almal.mp3tube.utilities.MediaPlayerService;
 import com.example.almal.mp3tube.utilities.NotificationGenerator;
-import com.example.almal.mp3tube.utilities.PagerAdapter;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
-public class AudioHandlingActivity extends AppCompatActivity implements SearchFragment.OnResultInteractionListener,
-        MusicPlayerFragment.OnMusicInteractionListener, HistoryFragment.OnHistoryInteractionListener,
-        MusicPlayerFragment.OnHandlingSeekBarListener {
+public class AudioHandlingActivity extends AppCompatActivity implements AudioHandlingContract.View, SearchFragment.OnResultInteractionListener,
+        MusicPlayerFragment.OnMusicInteractionListener, ProfileFragment.OnHistoryInteractionListener,
+        MusicPlayerFragment.OnHandlingSeekBarListener, LikeFragment.OnFirebaseLikeListener {
     //String url = "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=25&q=momen&key={YOUR_API_KEY}";
     //String key = "AIzaSyAsIU3kmaiwxqnEbtI0IvvdVCxxNixbE6c";
 
     MusicPlayerFragment musicPlayerFragment;
     SearchFragment searchFragment;
-    HistoryFragment historyFragment;
+    ProfileFragment profileFragment;
+    AudioHandlingPresenter audioHandlingPresenter;
+    private RecyclerView rv;
 
     private MediaPlayerService mediaPlayerService;
     BottomNavigationView bottomNavigationView;
@@ -55,6 +67,8 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
     NotificationGenerator notificationGenerator;
     NotificationCompat.Builder notificationBuilder;
     NotificationManager notificationManager;
+    TextView audio_handling_toolbar_tv;
+    Toolbar audio_handling_toolbar;
 
 
     HandleProgressBar handleProgressBar = new HandleProgressBar();
@@ -157,23 +171,46 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
     };
 
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu,menu);
+        MenuItem signoutButton = (MenuItem) menu.findItem(R.id.signout);
+        signoutButton.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+                audioHandlingPresenter.signout();
+                startActivity(SignUpActivity.getStartIntent(AudioHandlingActivity.this));
+                return false;
+            }
+        });
+        return super.onCreateOptionsMenu(menu);
+    }
+
     private BottomNavigationView.OnNavigationItemSelectedListener navListner = new BottomNavigationView.OnNavigationItemSelectedListener() {
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             Fragment selectedFragment = null;
+            String toolbar_string = "";
             switch (item.getItemId()) {
                 case R.id.menu_nav_search:
                     selectedFragment = searchFragment;
+                    toolbar_string = GlobalEntities.SEARCH_TOOLBAR_TAG;
                     break;
                 case R.id.menu_nav_song_player:
                     selectedFragment = musicPlayerFragment;
+                    toolbar_string = GlobalEntities.MUSIC_TOOLBAR_TAG;
                     break;
-                case R.id.menu_nav_history:
-                    selectedFragment = historyFragment;
+                case R.id.menu_nav_profile:
+                    selectedFragment = profileFragment;
+                    toolbar_string = GlobalEntities.PROFILE_TOOLBAR_TAG;
+
                     break;
             }
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                     selectedFragment).commitNow();
+            audio_handling_toolbar_tv.setText(toolbar_string);
+
+            //TODO getFragmentManager().addToBackStack(null);
             return true;
 
         }
@@ -182,15 +219,31 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
 
     private void init() {
         context = getApplicationContext();
+
+
         bottomNavigationView = (BottomNavigationView) findViewById(R.id.bottom_nav_widget);
         bottomNavigationView.setOnNavigationItemSelectedListener(navListner);
+        audio_handling_toolbar_tv = (TextView) findViewById(R.id.audio_handling_toolbar_tv);
 
+        audio_handling_toolbar = (Toolbar) findViewById(R.id.audio_handling_toolbar);
+        setSupportActionBar(audio_handling_toolbar);
+        audio_handling_toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onBackPressed();
+            }
+        });
+
+        //create audiohandling presenter and attach it
+        audioHandlingPresenter = new AudioHandlingPresenter(DataManager.getInstance(),this);
+        audioHandlingPresenter.attachView(this);
+
+        //audioHandlingPresenter.getPopularMusic("song");
         //create new search fragment ,music and library fragment instances.
-        searchFragment = SearchFragment.newInstance("search", "text");
-        musicPlayerFragment = MusicPlayerFragment.newInstance("search", "");
-        historyFragment = HistoryFragment.newInstance("search", "text");
+        searchFragment = SearchFragment.newInstance();
+        musicPlayerFragment = MusicPlayerFragment.newInstance();
+        profileFragment = ProfileFragment.newInstance();
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, searchFragment).commitNow();
-
         // create new instance from notification builder and manager
         notificationBuilder = new NotificationCompat.Builder(context);
         notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -252,6 +305,8 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        //deattach audio handling presenter
+        audioHandlingPresenter.detachView();
         mHandler.removeCallbacks(mUpdateTimeTask);
         unregisterReceiver(broadcastReceiver);
         notificationManager.cancelAll();
@@ -277,7 +332,6 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
         } else if (tag.equals(GlobalEntities.RESUME_PLAYER_TAG)) {
             mediaPlayerService.resumeMedia();
         } else if (tag.equals(GlobalEntities.PAUSE_PLAYER_TAG)) {
-
             mediaPlayerService.pauseMedia();
         } else if (tag.equals(GlobalEntities.NEXT_PLAYER_TAG)) {
 
@@ -290,24 +344,24 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
 
 
     @Override
-    public void onResultInteraction(String action, Item item) {
+    public void onResultInteraction(String action, FirebaseTracks firebaseTracks) {
         if (action.equals(GlobalEntities.PLAY_TAG)) {
             bottomNavigationView.setSelectedItemId(R.id.menu_nav_song_player);
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, musicPlayerFragment).commitNow();
-            musicPlayerFragment.streamSong(item);
+            audio_handling_toolbar_tv.setText(GlobalEntities.MUSIC_TOOLBAR_TAG);
+            musicPlayerFragment.streamSong(firebaseTracks);
             //mMusicPresenter.playClickedMusic(item);
         }
 
     }
 
     @Override
-    public void onMusictInteraction(String action, Item item) {
+    public void onMusictInteraction(String action, FirebaseTracks firebaseTrack) {
         if (action.equals(GlobalEntities.PLAY_TAG)) {
-            Log.i(GlobalEntities.AudioHandling_ACTIVITY, "onmusicinteraction: GlobalEntities.PLAY_MUSIC_API+item.getId().getVideoId()");
             startStreaming(GlobalEntities.STREAM_PLAYER_TAG,
-                    GlobalEntities.PLAY_MUSIC_API + item.getId().getVideoId(),
-                    item.getSnippet().getThumbnails().getDefault().getUrl(),
-                    item.getSnippet().getTitle());
+                    GlobalEntities.PLAY_MUSIC_API + firebaseTrack.getTrack_id(),
+                    firebaseTrack.getTrack_image(),
+                    firebaseTrack.getTrack_title());
         } else if (action.equals(GlobalEntities.NOTIFY_PAUSE)) {
             handleMusicPlayerStates(action);
         } else if (action.equals(GlobalEntities.NOTIFY_NEXT)) {
@@ -321,8 +375,10 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
     public void onHistoryInteraction(String action, VideoInfo videoInfo) {
         if (action.equals("play")) {
 
-            bottomNavigationView.setSelectedItemId(R.id.menu_nav_history);
+            bottomNavigationView.setSelectedItemId(R.id.menu_nav_profile);
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, musicPlayerFragment).commitNow();
+            audio_handling_toolbar_tv.setText(GlobalEntities.MUSIC_TOOLBAR_TAG);
+
         }
     }
 
@@ -364,6 +420,20 @@ public class AudioHandlingActivity extends AppCompatActivity implements SearchFr
         }
 
     }
+
+    @Override
+    public void OnFirebaseLikePlay(String tag, FirebaseTracks firebaseTrack) {
+        if (tag.equals(GlobalEntities.PLAY_TAG)) {
+            bottomNavigationView.setSelectedItemId(R.id.menu_nav_song_player);
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, musicPlayerFragment).commitNow();
+            audio_handling_toolbar_tv.setText(GlobalEntities.MUSIC_TOOLBAR_TAG);
+            musicPlayerFragment.streamSong(firebaseTrack);
+
+            //mMusicPresenter.playClickedMusic(item);
+        }
+
+    }
+
 }
 
 

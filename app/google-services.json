@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "669909092321",
+    "firebase_url": "https://mp3tube-a1d5b.firebaseio.com",
+    "project_id": "mp3tube-a1d5b",
+    "storage_bucket": "mp3tube-a1d5b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:669909092321:android:572c8fe72f7e2b72",
+        "android_client_info": {
+          "package_name": "com.example.almal.mp3tube"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "669909092321-gj6c4vkaln922qtus0uq8gkvkhhvjeau.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.almal.mp3tube",
+            "certificate_hash": "01a3788f839ec4cce78bdb12b013f44a172f4964"
+          }
+        },
+        {
+          "client_id": "669909092321-tm0kujmcnaj49ih8ngd57dibp2cbj46s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCorhEjD0WB-zxF5M-ZGV1NhtPJgNR2f5s"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "669909092321-tm0kujmcnaj49ih8ngd57dibp2cbj46s.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

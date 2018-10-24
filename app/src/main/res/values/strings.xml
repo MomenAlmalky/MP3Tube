@@ -3,4 +3,22 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="sign_up_str">"Signup"</string>
+    <string name="sign_in_str">"Signin"</string>
+    <string name="sign_up_intro_str">MP3TUBE is a powerfull app that
+            let you stream unlimited mp3 tracks from youtube</string>
+
+    <string name="email_str">email</string>
+
+    <string name="password_str">password</string>
+
+    <string name="username_str">username</string>
+    <string name="have_account_str">Already have an account? </string>
+    <string name="search_str">Search</string>
+    <string name="likes_str">likes</string>
+    <string name="playlists_str">Playlists</string>
+    <string name="history_str">History</string>
+    <string name="signout_str">Signout</string>
+
+
 </resources>

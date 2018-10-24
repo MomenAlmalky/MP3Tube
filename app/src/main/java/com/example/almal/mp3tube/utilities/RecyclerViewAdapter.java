@@ -62,7 +62,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     @Override
     public void onClick(View view) {
         if(view instanceof CardView){
-            Log.i("cardview","done");
+
         }
     }
 
@@ -85,7 +85,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             VideoViewHolder.videoTitle.setText(item.getSnippet().getTitle());
             VideoViewHolder.videoInfo.setText(item.getSnippet().getChannelTitle());
             //Log.i("urlimage",item.getImage());
-            Picasso.with(context).load(item.getSnippet().getThumbnails().getDefault().getUrl()).into(VideoViewHolder.videoPhoto);
+            Picasso.with(context).load(item.getSnippet().getThumbnails().getHigh().getUrl()).into(VideoViewHolder.videoPhoto);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override

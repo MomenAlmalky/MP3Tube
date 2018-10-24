@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-    <item android:id="@+id/song_play"
+
+    <item android:id="@+id/signout"
         app:showAsAction="ifRoom"
-        android:title="Song"
-        android:icon="@drawable/headphone"
-        />
-    <item android:id="@+id/history"
-        app:showAsAction="ifRoom"
-        android:title="History"
+        android:title="@string/signout_str"
+        android:icon="@drawable/icon_signout"
         />
 </menu>

@@ -32,6 +32,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="@dimen/label_muli_bold"
+            android:maxLines="2"
             android:textStyle="italic"
             android:layout_marginLeft="@dimen/margin_module_2"
             android:layout_marginRight="@dimen/margin_module_2"

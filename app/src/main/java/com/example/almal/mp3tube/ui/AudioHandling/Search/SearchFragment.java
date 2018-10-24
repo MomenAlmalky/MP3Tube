@@ -24,11 +24,13 @@ import android.widget.Toast;
 import com.android.volley.RequestQueue;
 import com.example.almal.mp3tube.R;
 import com.example.almal.mp3tube.data.DataManager;
+import com.example.almal.mp3tube.data.model.FirebaseTracks;
 import com.example.almal.mp3tube.data.model.Item;
 import com.example.almal.mp3tube.data.model.Snippet;
 import com.example.almal.mp3tube.data.model.VideoInfo;
 import com.example.almal.mp3tube.ui.AudioHandling.AudioHandlingActivity;
 import com.example.almal.mp3tube.utilities.GlobalEntities;
+import com.example.almal.mp3tube.utilities.LikesRecyclerViewAdapter;
 import com.example.almal.mp3tube.utilities.RecyclerViewAdapter;
 
 import java.util.ArrayList;
@@ -43,21 +45,12 @@ import java.util.List;
  * create an instance of this fragment.
  */
 public class SearchFragment extends Fragment implements SearchContract.View {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-    RequestQueue requestQueue;
-    ArrayList<VideoInfo> videoInfos = new ArrayList<VideoInfo>();
+
     private SearchPresenter mSearchPresenter;
     RecyclerView rv;
     EditText searchEditText;
-    Button searchButton;
 
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
     private OnResultInteractionListener mListener;
 
@@ -65,31 +58,17 @@ public class SearchFragment extends Fragment implements SearchContract.View {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment ResultFragment.
-     */
+
     // TODO: Rename and change types and number of parameters
-    public static SearchFragment newInstance(String param1, String param2) {
+    public static SearchFragment newInstance() {
         SearchFragment fragment = new SearchFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
         return fragment;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+
     }
 
     @Override
@@ -99,7 +78,6 @@ public class SearchFragment extends Fragment implements SearchContract.View {
         return inflater.inflate(R.layout.fragment_search, container, false);
     }
 /*
-    // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
             mListener.onResultInteraction("buttonBack","clicked");
@@ -116,75 +94,27 @@ public class SearchFragment extends Fragment implements SearchContract.View {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
 
-
-        /*
-        menu.clear();
-        inflater.inflate(R.menu.menu, menu);
-        MenuItem item = menu.findItem(R.id.song_play);
-        SearchView searchView = new SearchView(((AudioHandlingActivity) getContext()).getSupportActionBar().getThemedContext());
-        MenuItemCompat.setShowAsAction(item, MenuItemCompat.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW | MenuItemCompat.SHOW_AS_ACTION_IF_ROOM);
-        MenuItemCompat.setActionView(item, searchView);
-        *//*searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-
-                if (waitUsersAdapter != null){
-                    waitUsersAdapter.getFilter().filter(query);
-                    waitUsersAdapter.notifyDataSetChanged();
-                }
-                return true;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                Log.i("hereismenu","clicked");
-                if (waitUsersAdapter != null){
-                    newText = newText.toString().toLowerCase();
-
-                    final List<UserEvents> filteredList = new ArrayList<>();
-
-                    for (int i = 0; i < users.size(); i++) {
-
-                        final String text = users.get(i).getName().toLowerCase();
-                        if (text.contains(newText)) {
-
-                            filteredList.add(users.get(i));
-                        }
-                    }
-
-                    waitUsersAdapter = new WaitUsersAdapter(filteredList, new WaitUsersAdapter.OnItemClickListener() {
-                        @Override
-                        public void onItemClick(UserEvents item) {
-                            startActivity(VerifyNumberActivity.getStartIntent(getActivity()));
-                        }
-                    });
-
-                    recyclerView.setAdapter(waitUsersAdapter);
-                    waitUsersAdapter.notifyDataSetChanged();  // data set changed
-                }
-                return false;
-            }
-        });*/
     }
-
 
 
     public void init() {
 
-        mSearchPresenter = new SearchPresenter(DataManager.getInstance(),getActivity());
+        mSearchPresenter = new SearchPresenter(DataManager.getInstance(), getActivity());
         mSearchPresenter.attachView(this);
 
         rv = (RecyclerView) getView().findViewById(R.id.recycler_view_result_fragment);
         LinearLayoutManager llm = new LinearLayoutManager(getContext());
         rv.setLayoutManager(llm);
 
+        searchSong(null,"song");
         //when button clicked
         Button searchButton = (Button) getView().findViewById(R.id.search_fragment_search_btn);
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.i(GlobalEntities.AudioHandling_ACTIVITY,"searchButton: isclicked");
-                searchSong(view);
+                Log.i(GlobalEntities.AudioHandling_ACTIVITY, "searchButton: isclicked");
+                String text = searchEditText.getText().toString();
+                searchSong(view,text);
             }
         });
 
@@ -196,7 +126,8 @@ public class SearchFragment extends Fragment implements SearchContract.View {
             public boolean onKey(View view, int i, KeyEvent keyEvent) {
                 if ((keyEvent.getAction() == KeyEvent.ACTION_DOWN) &&
                         (i == KeyEvent.KEYCODE_ENTER)) {
-                    searchSong(view);
+                    String text = searchEditText.getText().toString();
+                    searchSong(view,text);
                     return true;
                 }
                 return false;
@@ -222,42 +153,51 @@ public class SearchFragment extends Fragment implements SearchContract.View {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+        mSearchPresenter.detachView();
     }
 
     @Override
     public void showResults(List<Item> itemList) {
+        ArrayList<FirebaseTracks> firebaseTracksArrayList = new ArrayList<>();
+        for(Item item:itemList){
+            FirebaseTracks firebaseTrack = new FirebaseTracks();
+            firebaseTrack.setTrack_id(item.getId().getVideoId());
+            firebaseTrack.setTrack_title(item.getSnippet().getTitle());
+            firebaseTrack.setTrack_author(item.getSnippet().getChannelTitle());
+            firebaseTrack.setTrack_image(item.getSnippet().getThumbnails().getHigh().getUrl());
+            firebaseTracksArrayList.add(firebaseTrack);
+        }
 
-            Log.i(GlobalEntities.SEARCH_FRAGMENT,"Results are: "+itemList.toString());
-            RecyclerViewAdapter RA = new RecyclerViewAdapter(getActivity(),itemList, new RecyclerViewAdapter.OnItemClickListener() {
-                @Override
-                public void onItemClick(Item item) {
-                    mListener.onResultInteraction(GlobalEntities.PLAY_TAG, item);
-                }
-            });
-            rv.setAdapter(RA);
-            RA.notifyDataSetChanged();
+
+        LikesRecyclerViewAdapter RA = new LikesRecyclerViewAdapter(getActivity(), firebaseTracksArrayList, new LikesRecyclerViewAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(FirebaseTracks firebaseTracks) {
+                mListener.onResultInteraction(GlobalEntities.PLAY_TAG, firebaseTracks);
+            }
+        });
+
+        rv.setAdapter(RA);
+        RA.notifyDataSetChanged();
 
     }
 
-    public void searchSongAPICall(String text){
+    public void searchSongAPICall(String text) {
 
     }
 
     //to search for specific song
-    private void searchSong(View view){
-        String text = searchEditText.getText().toString();
+    public void searchSong(View view,String text) {
         text.trim();
-        if(!text.isEmpty()){
+        if (!text.isEmpty()) {
             View keyboard = getActivity().getCurrentFocus();
             if (view != null) {
-                InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
             }
 
             mSearchPresenter.search_youtube_API(text);
-        }
-        else {
-            Toast.makeText(getContext(),"You must enter a word to start search",Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(getContext(), "You must enter a word to start search", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -273,6 +213,6 @@ public class SearchFragment extends Fragment implements SearchContract.View {
      */
     public interface OnResultInteractionListener {
         // TODO: Update argument type and name
-        void onResultInteraction(String action, Item item);
+        void onResultInteraction(String action, FirebaseTracks firebaseTracks);
     }
 }

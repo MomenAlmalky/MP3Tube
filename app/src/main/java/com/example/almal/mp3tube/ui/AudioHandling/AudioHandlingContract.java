@@ -2,8 +2,10 @@ package com.example.almal.mp3tube.ui.AudioHandling;
 
 import android.media.MediaPlayer;
 
+import com.example.almal.mp3tube.data.model.Item;
 import com.example.almal.mp3tube.data.model.VideoInfo;
 import com.example.almal.mp3tube.ui.base.BasePresenter;
+import com.example.almal.mp3tube.ui.base.BaseView;
 
 import java.util.List;
 
@@ -13,17 +15,11 @@ import java.util.List;
 
 public class AudioHandlingContract {
 
-    public interface View {
-        void playMusic(MediaPlayer mediaPlayer, VideoInfo videoInfo);
-        void stopMusic(MediaPlayer mediaPlayer, VideoInfo videoInfo);
-        void nextMusic(MediaPlayer mediaPlayer, VideoInfo videoInfo);
-        void updateNotification(MediaPlayer mediaPlayer,VideoInfo videoInfo);
-        void showResults(List<VideoInfo> videoInfoList);
+    public interface View extends BaseView {
     }
 
     public interface Presenter {
-        void playMusic(MediaPlayer mediaPlayer, VideoInfo videoInfo);
-        void stopMusic(MediaPlayer mediaPlayer, VideoInfo videoInfo);
+        void signout();
     }
 
 }
