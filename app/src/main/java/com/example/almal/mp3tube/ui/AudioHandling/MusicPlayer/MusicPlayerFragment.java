@@ -21,7 +21,7 @@ import com.squareup.picasso.Picasso;
 
 public class MusicPlayerFragment extends Fragment implements MusicPlayerContract.View {
 
-    public boolean pause_flag;
+    public boolean pause_flag = false;;
     Button play, next_btn, previous_btn, like_btn, add_to_playlist_btn;
     TextView current, duration, songTitle, songArtist;
     SeekBar seekBar;
@@ -51,7 +51,7 @@ public class MusicPlayerFragment extends Fragment implements MusicPlayerContract
         super.onCreate(savedInstanceState);
 
         //initialize non-graphical variables
-        pause_flag = false;
+
     }
 
     @Override
@@ -87,17 +87,18 @@ public class MusicPlayerFragment extends Fragment implements MusicPlayerContract
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (firebaseTrack != null) {
+                    if (pause_flag == true) {
+                        pause_flag = false;
+                        resume();
+                        mListener.onMusictInteraction(GlobalEntities.NOTIFY_PAUSE, firebaseTrack);
 
-                if (pause_flag == true) {
-                    pause_flag = false;
-                    resume();
-                    mListener.onMusictInteraction(GlobalEntities.NOTIFY_PAUSE, firebaseTrack);
+                    } else {
+                        pause_flag = true;
+                        pause();
+                        mListener.onMusictInteraction(GlobalEntities.NOTIFY_PAUSE, firebaseTrack);
 
-                } else {
-                    pause_flag = true;
-                    pause();
-                    mListener.onMusictInteraction(GlobalEntities.NOTIFY_PAUSE, firebaseTrack);
-
+                    }
                 }
             }
         });
@@ -167,18 +168,39 @@ public class MusicPlayerFragment extends Fragment implements MusicPlayerContract
         handlingSeekBarListener = null;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadTrackUI(firebaseTrack);
+        if (pause_flag == true) {
+            pause();
+        } else {
+            resume();
+        }
+    }
+
+
     public void streamSong(FirebaseTracks firebaseTrack) {
         this.firebaseTrack = firebaseTrack;
-        playMusic(firebaseTrack);
+        playMusic(GlobalEntities.PLAY_TAG, firebaseTrack);
     }
 
     @Override
-    public void playMusic(FirebaseTracks firebaseTrack) {
-        Picasso.with(getContext()).load(firebaseTrack.getTrack_image()).into(imageView);
-        songTitle.setText(firebaseTrack.getTrack_title());
-        songArtist.setText(firebaseTrack.getTrack_author());
-        mMusicPresenter.isLiked(firebaseTrack, GlobalEntities.FALSE_VALUE);
-        mListener.onMusictInteraction(GlobalEntities.PLAY_TAG, firebaseTrack);
+    public void playMusic(String tag, FirebaseTracks firebaseTrack) {
+        if (firebaseTrack != null) {
+            loadTrackUI(firebaseTrack);
+            mMusicPresenter.isLiked(firebaseTrack, GlobalEntities.FALSE_VALUE);
+            mMusicPresenter.addToHistory(firebaseTrack);
+            mListener.onMusictInteraction(tag, firebaseTrack);
+        }
+    }
+
+    public void loadTrackUI(FirebaseTracks firebaseTrack) {
+        if (firebaseTrack != null) {
+            Picasso.with(getContext()).load(firebaseTrack.getTrack_image()).into(imageView);
+            songTitle.setText(firebaseTrack.getTrack_title());
+            songArtist.setText(firebaseTrack.getTrack_author());
+        }
     }
 
     @Override
@@ -186,12 +208,12 @@ public class MusicPlayerFragment extends Fragment implements MusicPlayerContract
         if (isliked && likeBtn) {
             mMusicPresenter.unLikeTrack(firebaseTrack);
             like_btn.setBackgroundResource(R.drawable.icons8_unlike_heart);
-        }else if(!isliked && likeBtn){
+        } else if (!isliked && likeBtn) {
             mMusicPresenter.likeTrack(firebaseTrack);
             like_btn.setBackgroundResource(R.drawable.icons8_liked_heart);
-        }else if(isliked && !likeBtn){
+        } else if (isliked && !likeBtn) {
             like_btn.setBackgroundResource(R.drawable.icons8_liked_heart);
-        }else{
+        } else {
             like_btn.setBackgroundResource(R.drawable.icons8_unlike_heart);
         }
     }

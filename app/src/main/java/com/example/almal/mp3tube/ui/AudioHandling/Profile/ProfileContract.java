@@ -1,5 +1,6 @@
 package com.example.almal.mp3tube.ui.AudioHandling.Profile;
 
+import com.example.almal.mp3tube.data.model.FirebaseTracks;
 import com.example.almal.mp3tube.data.model.Item;
 import com.example.almal.mp3tube.ui.base.BaseView;
 
@@ -11,7 +12,7 @@ import java.util.List;
 
 public interface ProfileContract {
     public interface View extends BaseView {
-        void showHistory(List<Item> itemsList);
+        void showHistory(List<FirebaseTracks> itemsList);
 
     }
 

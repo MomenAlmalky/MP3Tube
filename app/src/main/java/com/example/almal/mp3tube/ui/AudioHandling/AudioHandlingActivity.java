@@ -203,7 +203,6 @@ public class AudioHandlingActivity extends AppCompatActivity implements AudioHan
                 case R.id.menu_nav_profile:
                     selectedFragment = profileFragment;
                     toolbar_string = GlobalEntities.PROFILE_TOOLBAR_TAG;
-
                     break;
             }
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
@@ -372,12 +371,12 @@ public class AudioHandlingActivity extends AppCompatActivity implements AudioHan
     }
 
     @Override
-    public void onHistoryInteraction(String action, VideoInfo videoInfo) {
-        if (action.equals("play")) {
-
-            bottomNavigationView.setSelectedItemId(R.id.menu_nav_profile);
+    public void onHistoryInteraction(String tag, FirebaseTracks firebaseTrack) {
+        if (tag.equals(GlobalEntities.PLAY_TAG)) {
+            bottomNavigationView.setSelectedItemId(R.id.menu_nav_song_player);
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, musicPlayerFragment).commitNow();
             audio_handling_toolbar_tv.setText(GlobalEntities.MUSIC_TOOLBAR_TAG);
+            musicPlayerFragment.streamSong(firebaseTrack);
 
         }
     }

@@ -119,4 +119,15 @@ public class MusicPlayerPresenter extends BasePresenter<MusicPlayerContract.View
     }
 
 
+    @Override
+    public void addToHistory(FirebaseTracks firebaseTrack) {
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            databaseReference.child(GlobalEntities.DATABASE_REF_History).child(user.getUid())
+                    .child(firebaseTrack.getTrack_id()).setValue(firebaseTrack);
+
+        } else {
+
+        }
+    }
 }

@@ -12,11 +12,12 @@ import java.util.List;
 
 public interface MusicPlayerContract {
     public interface View extends BaseView {
-        void playMusic(FirebaseTracks firebaseTrack);
+        void playMusic(String tag,FirebaseTracks firebaseTrack);
         void isLikedCallBack(boolean isLiked,boolean btn);
     }
 
     public interface Presenter {
+        void addToHistory(FirebaseTracks firebaseTracks);
     }
 
 }

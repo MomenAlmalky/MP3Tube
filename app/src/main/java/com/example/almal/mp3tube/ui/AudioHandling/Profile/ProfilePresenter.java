@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.example.almal.mp3tube.data.DataManager;
+import com.example.almal.mp3tube.data.model.FirebaseTracks;
 import com.example.almal.mp3tube.ui.base.BasePresenter;
 import com.example.almal.mp3tube.utilities.GlobalEntities;
 import com.google.firebase.auth.FirebaseAuth;
@@ -13,6 +14,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
 
 import rx.Subscription;
 
@@ -27,6 +30,7 @@ public class ProfilePresenter extends BasePresenter<ProfileContract.View> implem
     private Context mContext;
     private FirebaseAuth mAuth;
     private DatabaseReference databaseReference;
+    ArrayList<FirebaseTracks> firebaseTracksList;
 
 
     public ProfilePresenter(DataManager mDataManager, Context mContext) {
@@ -55,19 +59,28 @@ public class ProfilePresenter extends BasePresenter<ProfileContract.View> implem
         FirebaseUser user = mAuth.getCurrentUser();
         // TODO add to database flag signed in or not
         if (user != null) {
-            databaseReference.child(GlobalEntities.DATABASE_REF_USERS).child(user.getUid())
-                    .child(GlobalEntities.DATABASE_REF_LOGGED_IN).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if (dataSnapshot.exists()) {
-                        Log.i(GlobalEntities.SPLASH_ACTIVITY, String.valueOf(dataSnapshot.getValue()));
-                        String data = String.valueOf(dataSnapshot.getValue());
-                    }
-                }
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
+            databaseReference.child(GlobalEntities.DATABASE_REF_History).child(user.getUid())
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            firebaseTracksList = new ArrayList<FirebaseTracks>();
+                            for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
 
-                }
+                                if (postSnapshot.exists()) {
+                                    firebaseTracksList.add(postSnapshot.getValue(FirebaseTracks.class));
+
+                                } else {
+
+                                }
+                            }
+                            if (!firebaseTracksList.isEmpty()) {
+                                getBaseView().showHistory(firebaseTracksList);
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                        }
             });
 
 
